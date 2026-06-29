@@ -346,6 +346,7 @@ config('mail_options.tones', [])[$key] ?? $fallback
 - **Phaseが完了したらPRを作成する**（mainへのdirect pushは禁止）
 - PRのタイトルは`Phase {N}: {内容}`の形式
 - @codex review でCodexにコードレビューを依頼する
+- **PRのマージは必ず人間（kannakimura）が行う。Claudeは絶対にマージしない**
 
 ## コーディングルール
 
