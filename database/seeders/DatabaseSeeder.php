@@ -16,13 +16,13 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // デモ用ユーザーを1件作成する
-        // デモ用adminユーザーを作成する（既存の場合はis_adminをtrueに更新する）
+        // デモ用ユーザーを作成する（local環境のみis_admin=true）
         User::updateOrCreate(
             ['email' => 'demo@innask.local'],
             [
                 'name'     => 'Demo User',
                 'password' => bcrypt('password'),
-                'is_admin' => true,
+                'is_admin' => app()->environment('local'),
             ]
         );
     }
