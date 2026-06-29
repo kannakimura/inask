@@ -9,6 +9,9 @@ primary reliability risks.
 
 ## Review guidelines
 
+- Write all GitHub pull request review summaries and inline review comments in
+  Japanese. Keep code symbols, file paths, class names, method names, and error
+  messages in their original language.
 - Flag any change that can lose uploaded documents, chunks, embeddings, FAQs,
   or user data as P1 unless it has a clear migration, rollback, or recovery
   path.
