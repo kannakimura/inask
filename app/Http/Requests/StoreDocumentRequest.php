@@ -25,14 +25,14 @@ class StoreDocumentRequest extends FormRequest
         ];
     }
 
-    // バリデーションエラーメッセージの日本語化
+    // バリデーションエラーメッセージをconfigから取得する
     public function messages(): array
     {
         return [
-            'file.required'  => 'ファイルを選択してください。',
-            'file.file'      => '有効なファイルをアップロードしてください。',
-            'file.max'       => 'ファイルサイズは10MB以内にしてください。',
-            'file.mimetypes' => 'PDF・テキスト・Markdownファイルのみアップロードできます。',
+            'file.required'  => config('errors.file.required'),
+            'file.file'      => config('errors.file.file'),
+            'file.max'       => config('errors.file.max'),
+            'file.mimetypes' => config('errors.file.mimetypes'),
         ];
     }
 }
