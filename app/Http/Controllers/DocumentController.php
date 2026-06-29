@@ -49,6 +49,9 @@ class DocumentController extends Controller
     // ドキュメントを削除する
     public function destroy(Document $document)
     {
+        // adminユーザーのみ削除を許可する（DocumentPolicy::deleteで判定）
+        $this->authorize('delete', $document);
+
         // Serviceに削除処理を委譲する
         $this->documentService->destroy($document);
 
