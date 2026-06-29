@@ -17,14 +17,14 @@ class DocumentController extends Controller
     public function index()
     {
         // TODO(Phase 2-7): ドキュメント一覧の取得・表示を実装する
-        abort(501);
+        abort(403);
     }
 
     // アップロードフォームを表示する
     public function create()
     {
         // TODO(Phase 2-5): アップロードフォームのViewを返す
-        abort(501);
+        abort(403);
     }
 
     // アップロードされたファイルを保存する
@@ -43,7 +43,7 @@ class DocumentController extends Controller
     public function show(Document $document)
     {
         // TODO(Phase 2-7): ドキュメント詳細・FAQ一覧の表示を実装する
-        abort(501);
+        abort(403);
     }
 
     // ドキュメントを削除する
