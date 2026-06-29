@@ -127,6 +127,13 @@ return [
             'path' => storage_path('logs/laravel.log'),
         ],
 
+        // ファイル削除失敗専用チャンネル
+        'file_deletion' => [
+            'driver' => 'single',
+            'path'   => storage_path('logs/file_deletion_failures.log'),
+            'level'  => 'warning',
+        ],
+
     ],
 
 ];

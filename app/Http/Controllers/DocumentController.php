@@ -2,44 +2,62 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Http\Requests\StoreDocumentRequest;
+use App\Models\Document;
+use App\Services\DocumentService;
 
 class DocumentController extends Controller
 {
-    // TODO(Phase 2-3): アップロード処理・バリデーション・Serviceの呼び出しを実装する
+    // DocumentServiceをDIで受け取る
+    public function __construct(private DocumentService $documentService)
+    {
+    }
 
     // ドキュメント一覧を表示する
     public function index()
     {
         // TODO(Phase 2-7): ドキュメント一覧の取得・表示を実装する
-        abort(501);
+        abort(403);
     }
 
     // アップロードフォームを表示する
     public function create()
     {
         // TODO(Phase 2-5): アップロードフォームのViewを返す
-        abort(501);
+        abort(403);
     }
 
     // アップロードされたファイルを保存する
-    public function store(Request $request)
+    public function store(StoreDocumentRequest $request)
     {
-        // TODO(Phase 2-4): バリデーション・ストレージ保存・DB登録を実装する
-        abort(501);
+        // バリデーション済みファイルをServiceに渡して保存する
+        $document = $this->documentService->store($request->file('file'));
+
+        // index()未実装のためdashboardへリダイレクトする（Phase 2-7で変更予定）
+        return redirect()
+            ->route('dashboard')
+            ->with('success', 'ドキュメントをアップロードしました。');
     }
 
     // ドキュメント詳細（FAQ一覧）を表示する
-    public function show(string $id)
+    public function show(Document $document)
     {
         // TODO(Phase 2-7): ドキュメント詳細・FAQ一覧の表示を実装する
-        abort(501);
+        abort(403);
     }
 
     // ドキュメントを削除する
-    public function destroy(string $id)
+    public function destroy(Document $document)
     {
-        // TODO(Phase 2-7): ドキュメント削除処理を実装する
-        abort(501);
+        // adminユーザーのみ削除を許可する（DocumentPolicy::deleteで判定）
+        $this->authorize('delete', $document);
+
+        // Serviceに削除処理を委譲する
+        $this->documentService->destroy($document);
+
+        // index()未実装のためdashboardへリダイレクトする（Phase 2-7で変更予定）
+        return redirect()
+            ->route('dashboard')
+            ->with('success', 'ドキュメントを削除しました。');
     }
 }
