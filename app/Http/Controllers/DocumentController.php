@@ -33,9 +33,9 @@ class DocumentController extends Controller
         // バリデーション済みファイルをServiceに渡して保存する
         $document = $this->documentService->store($request->file('file'));
 
-        // show()は未実装のためindexへリダイレクトする（指摘4対応・Phase 2-7で変更予定）
+        // index()未実装のためdashboardへリダイレクトする（Phase 2-7で変更予定）
         return redirect()
-            ->route('documents.index')
+            ->route('dashboard')
             ->with('success', 'ドキュメントをアップロードしました。');
     }
 
@@ -55,8 +55,9 @@ class DocumentController extends Controller
         // Serviceに削除処理を委譲する
         $this->documentService->destroy($document);
 
+        // index()未実装のためdashboardへリダイレクトする（Phase 2-7で変更予定）
         return redirect()
-            ->route('documents.index')
+            ->route('dashboard')
             ->with('success', 'ドキュメントを削除しました。');
     }
 }
