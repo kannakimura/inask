@@ -19,7 +19,7 @@ class DocumentService
 
         // store()はfalseを返す可能性があるため検査する（指摘5対応）
         if ($path === false) {
-            throw new RuntimeException('ファイルの保存に失敗しました。');
+            throw new RuntimeException(config('errors.file.store_failed'));
         }
 
         try {
@@ -70,7 +70,7 @@ class DocumentService
         $fileDeleted = Storage::disk('local')->delete($filePath);
 
         if (!$fileDeleted) {
-            Log::channel('file_deletion')->warning('ファイル削除に失敗しました（孤立ファイル）', [
+            Log::channel('file_deletion')->warning(config('errors.file.deletion_failed'), [
                 'document_id' => $documentId,
                 'file_path'   => $filePath,
             ]);
