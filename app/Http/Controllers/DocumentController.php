@@ -12,29 +12,34 @@ class DocumentController extends Controller
     public function index()
     {
         // TODO(Phase 2-7): ドキュメント一覧の取得・表示を実装する
+        abort(501);
     }
 
     // アップロードフォームを表示する
     public function create()
     {
         // TODO(Phase 2-5): アップロードフォームのViewを返す
+        abort(501);
     }
 
     // アップロードされたファイルを保存する
     public function store(Request $request)
     {
         // TODO(Phase 2-4): バリデーション・ストレージ保存・DB登録を実装する
+        abort(501);
     }
 
     // ドキュメント詳細（FAQ一覧）を表示する
     public function show(string $id)
     {
         // TODO(Phase 2-7): ドキュメント詳細・FAQ一覧の表示を実装する
+        abort(501);
     }
 
     // ドキュメントを削除する
     public function destroy(string $id)
     {
         // TODO(Phase 2-7): ドキュメント削除処理を実装する
+        abort(501);
     }
 }
