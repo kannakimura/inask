@@ -8,6 +8,9 @@ return [
         'failed'     => 'failed',
     ],
 
+    // アップロード可能な最大ファイルサイズ（KB単位）
+    'max_upload_size_kb' => env('MAX_UPLOAD_SIZE_KB', 10240),
+
     'supported_mime_types' => [
         'application/pdf',
         'text/plain',
