@@ -19,19 +19,22 @@ class StoreDocumentRequest extends FormRequest
             'file' => [
                 'required',
                 'file',
-                'max:10240', // 最大10MB
+                // 最大サイズはconfigから取得する（KB単位）
+                'max:' . config('inask.max_upload_size_kb', 10240),
                 'mimetypes:' . implode(',', config('inask.supported_mime_types', [])),
             ],
         ];
     }
 
-    // バリデーションエラーメッセージをconfigから取得する
+    // バリデーションエラーメッセージをconfigから取得する（サイズ上限は動的に組み立てる）
     public function messages(): array
     {
+        $maxMb = config('inask.max_upload_size_kb', 10240) / 1024;
+
         return [
             'file.required'  => config('errors.file.required'),
             'file.file'      => config('errors.file.file'),
-            'file.max'       => config('errors.file.max'),
+            'file.max'       => "ファイルサイズは{$maxMb}MB以内にしてください。",
             'file.mimetypes' => config('errors.file.mimetypes'),
         ];
     }
