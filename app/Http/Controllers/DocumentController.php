@@ -33,8 +33,9 @@ class DocumentController extends Controller
         // バリデーション済みファイルをServiceに渡して保存する
         $document = $this->documentService->store($request->file('file'));
 
+        // show()は未実装のためindexへリダイレクトする（指摘4対応・Phase 2-7で変更予定）
         return redirect()
-            ->route('documents.show', $document)
+            ->route('documents.index')
             ->with('success', 'ドキュメントをアップロードしました。');
     }
 
