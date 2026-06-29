@@ -51,24 +51,24 @@ class DocumentService
         return $document;
     }
 
-    // ドキュメントをDBから削除した後にストレージのファイルを削除する
+    // ドキュメントを削除する（ファイル削除成功後にDBを削除する）
     public function destroy(Document $document): void
     {
-        // 削除前にfile_pathを保持しておく
-        $filePath = $document->file_path;
+        // ストレージからファイルを先に削除する（トランザクション外）
+        // 失敗時はDBを削除せずエラーにすることで孤立ファイルを防ぐ
+        $deleted = Storage::disk('local')->delete($document->file_path);
 
-        // DBからドキュメントを先に削除する（chunksとfaqsはcascadeで削除される）
-        // DB commit後にファイルを削除することで「ファイルだけ消えてDB残る」を防ぐ（指摘2対応）
+        if (!$deleted) {
+            throw new RuntimeException('ファイルの削除に失敗しました。');
+        }
+
+        // ファイル削除成功後にDBからドキュメントを削除する（chunksとfaqsはcascadeで削除）
         DB::transaction(function () use ($document) {
             $document->delete();
         });
 
-        // DB commit成功後にストレージのファイルを削除する
-        Storage::disk('local')->delete($filePath);
-
         Log::info('ドキュメントを削除しました', [
             'document_id' => $document->id,
-            'title'       => $document->title,
         ]);
     }
 }
