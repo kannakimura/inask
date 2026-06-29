@@ -66,7 +66,15 @@ class DocumentService
         });
 
         // DB削除確定後にストレージのファイルを削除する（トランザクション外）
-        Storage::disk('local')->delete($filePath);
+        // 失敗してもDBからは追跡不能なため専用チャンネルにログを残す
+        $fileDeleted = Storage::disk('local')->delete($filePath);
+
+        if (!$fileDeleted) {
+            Log::channel('file_deletion')->warning('ファイル削除に失敗しました（孤立ファイル）', [
+                'document_id' => $documentId,
+                'file_path'   => $filePath,
+            ]);
+        }
 
         Log::info('ドキュメントを削除しました', [
             'document_id' => $documentId,
