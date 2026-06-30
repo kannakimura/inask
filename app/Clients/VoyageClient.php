@@ -30,7 +30,16 @@ class VoyageClient
         try {
             $response = Http::withToken($this->apiKey)
                 ->timeout(30)
-                ->retry(3, 1000)
+                // 429・5xx・接続断のみリトライする（401など認証エラーはリトライしない）
+                ->retry(3, 1000, function (\Exception $e) {
+                    if ($e instanceof ConnectionException) {
+                        return true;
+                    }
+                    if ($e instanceof RequestException) {
+                        return $e->response->status() !== 401;
+                    }
+                    return false;
+                })
                 ->post("{$this->baseUrl}/embeddings", [
                     'model' => $this->model,
                     'input' => [$text],
