@@ -122,7 +122,7 @@ class DashboardTest extends TestCase
         $response = $this->actingAs($user)->get(route('dashboard'));
 
         $response->assertStatus(200);
-        $response->assertSee('アップロードされたドキュメントはありません。');
+        $response->assertSee(config('errors.dashboard.no_documents'));
     }
 
     // adminユーザーには削除ボタンが表示される
@@ -226,7 +226,7 @@ class DashboardTest extends TestCase
         $response = $this->actingAs($user)->get(route('dashboard'));
 
         $response->assertStatus(200);
-        $response->assertSee('FAQはまだ生成されていません。');
+        $response->assertSee(config('errors.dashboard.faq_not_generated'));
     }
 
     // failedステータスのドキュメントはFAQ生成失敗メッセージが表示される
@@ -239,7 +239,7 @@ class DashboardTest extends TestCase
         $response = $this->actingAs($user)->get(route('dashboard'));
 
         $response->assertStatus(200);
-        $response->assertSee('処理に失敗したため、FAQを生成できませんでした。');
+        $response->assertSee(config('errors.dashboard.faq_failed'));
     }
 
     // pending/processingのドキュメントはFAQ待機メッセージが表示される
@@ -252,6 +252,35 @@ class DashboardTest extends TestCase
         $response = $this->actingAs($user)->get(route('dashboard'));
 
         $response->assertStatus(200);
-        $response->assertSee('ベクトル化処理が完了するとFAQが表示されます。');
+        $response->assertSee(config('errors.dashboard.faq_processing'));
+    }
+
+    // ドキュメント0件の空状態でadminにはアップロードCTAボタンが表示される
+    public function test_empty_state_shows_upload_cta_for_admin(): void
+    {
+        $this->withoutVite();
+        $admin = User::factory()->create(['is_admin' => true]);
+
+        $response = $this->actingAs($admin)->get(route('dashboard'));
+
+        $response->assertStatus(200);
+        $response->assertSee(config('errors.dashboard.no_documents'));
+        // アップロードCTAボタンが表示されることを確認する
+        $response->assertSee('アップロードする');
+        $response->assertSee('#upload-form', false);
+    }
+
+    // ドキュメント0件の空状態で非adminにはCTAボタンが表示されない
+    public function test_empty_state_hides_upload_cta_for_non_admin(): void
+    {
+        $this->withoutVite();
+        $user = User::factory()->create(['is_admin' => false]);
+
+        $response = $this->actingAs($user)->get(route('dashboard'));
+
+        $response->assertStatus(200);
+        $response->assertSee(config('errors.dashboard.no_documents'));
+        // 非adminにはCTAが表示されないことを確認する
+        $response->assertDontSee('アップロードする');
     }
 }

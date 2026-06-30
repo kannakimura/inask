@@ -172,4 +172,39 @@ class SearchTest extends TestCase
         // 出典件数が表示されることを確認する
         $response->assertSee('参照ドキュメント（2件）');
     }
+
+    // 検索前の初期状態では使い方ガイダンスと検索例が表示される
+    public function test_search_index_shows_initial_guidance(): void
+    {
+        $this->withoutVite();
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->get(route('search.index'));
+
+        $response->assertStatus(200);
+        // 初期ガイダンスが表示されることを確認する
+        $response->assertSee('社内ドキュメントに質問してみましょう');
+        // 検索例が表示されることを確認する
+        $response->assertSee('有給休暇の申請方法は？');
+    }
+
+    // 検索後には初期ガイダンスが表示されない
+    public function test_search_result_hides_initial_guidance(): void
+    {
+        $this->withoutVite();
+        $user   = User::factory()->create();
+        $source = new SearchResult(chunkId: 1, documentId: 1, documentTitle: 'doc.pdf', content: '内容', distance: 0.1);
+
+        $this->mock(SearchService::class)->shouldReceive('search')->andReturn([$source]);
+        $this->mock(AnswerGeneratorService::class)->shouldReceive('generate')->andReturn(
+            new AnswerResult(answer: '回答', sources: [$source])
+        );
+
+        $response = $this->actingAs($user)->post(route('search.query'), ['query' => 'テスト']);
+
+        $response->assertStatus(200);
+        // 回答が表示されたときは初期ガイダンスが非表示になることを確認する
+        $response->assertDontSee('社内ドキュメントに質問してみましょう');
+        $response->assertSee('回答');
+    }
 }
