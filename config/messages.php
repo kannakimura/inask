@@ -16,7 +16,7 @@ return [
         'upload_button'         => 'アップロード',
         'upload_cta_button'     => 'アップロードする',
         'delete_button'         => '削除',
-        'keyword_placeholder'   => 'タイトル・内容で絞り込む',
+        'keyword_placeholder'   => '社内ドキュメントをタイトル・内容で絞り込む',
         'keyword_button'        => '絞り込み',
         'keyword_clear'         => 'クリア',
         'no_results'            => '該当するドキュメントが見つかりませんでした',
