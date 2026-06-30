@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SearchController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -17,6 +18,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // 検索ルート（認証必須）
+    Route::prefix('search')->name('search.')->group(function () {
+        // 検索フォーム表示
+        Route::get('/', [SearchController::class, 'index'])->name('index');
+        // 検索実行
+        Route::post('/', [SearchController::class, 'search'])->name('query');
+    });
 
     // ドキュメント管理ルート（認証必須）
     Route::prefix('documents')->name('documents.')->group(function () {
