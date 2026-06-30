@@ -9,14 +9,14 @@ use App\Services\TextExtractorService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 
 class ProcessDocumentJob implements ShouldQueue
 {
     use Queueable;
 
-    // 失敗時のリトライ上限（外部APIの一時的障害に対応するため3回）
-    public int $tries = 3;
+    // リトライしない（embedding APIを再呼び出しすると課金が重複するため）
+    // 失敗時は管理者がドキュメントを再アップロードして対処する
+    public int $tries = 1;
 
     public function __construct(private Document $document)
     {
@@ -32,9 +32,8 @@ class ProcessDocumentJob implements ShouldQueue
         $this->document->update(['status' => config('inask.document_status.processing')]);
 
         try {
-            // ストレージからファイルの絶対パスを取得してテキストを抽出する
-            $absolutePath = Storage::disk('local')->path($this->document->file_path);
-            $text         = $textExtractor->extract($absolutePath, $this->document->mime_type);
+            // Storage keyをそのまま渡す（TextExtractorService内部で絶対パスに変換するため）
+            $text = $textExtractor->extract($this->document->file_path, $this->document->mime_type);
 
             // テキストをチャンクに分割する
             $chunks = $chunkSplitter->split($text);
@@ -51,7 +50,6 @@ class ProcessDocumentJob implements ShouldQueue
             ]);
         } catch (\Throwable $e) {
             // 処理失敗時はステータスをfailedに更新してから例外を再スローする
-            // （再スローすることでLaravelのリトライ・failed_jobsの仕組みが動く）
             $this->document->update(['status' => config('inask.document_status.failed')]);
 
             Log::error(config('errors.process_document.failed'), [
