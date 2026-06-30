@@ -48,8 +48,12 @@ class VoyageClientTest extends TestCase
     {
         config(['services.voyage.api_key' => 'test-key']);
 
+        // リトライが走らないよう常に401を返すシーケンスを設定する
         Http::fake([
-            'api.voyageai.com/*' => Http::response(['error' => 'Unauthorized'], 401),
+            'api.voyageai.com/*' => Http::sequence()
+                ->push(['error' => 'Unauthorized'], 401)
+                ->push(['error' => 'Unauthorized'], 401)
+                ->push(['error' => 'Unauthorized'], 401),
         ]);
 
         $this->expectException(\RuntimeException::class);

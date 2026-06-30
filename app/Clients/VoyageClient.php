@@ -14,7 +14,8 @@ class VoyageClient
 
     public function __construct()
     {
-        $this->apiKey = config('services.voyage.api_key', '');
+        // nullの場合も空文字に正規化してembed()内で一元チェックする
+        $this->apiKey = config('services.voyage.api_key') ?? '';
         $this->model  = config('inask.embedding.model', 'voyage-3');
     }
 
@@ -28,6 +29,7 @@ class VoyageClient
         try {
             $response = Http::withToken($this->apiKey)
                 ->timeout(30)
+                ->retry(3, 1000)
                 ->post("{$this->baseUrl}/embeddings", [
                     'model' => $this->model,
                     'input' => [$text],
