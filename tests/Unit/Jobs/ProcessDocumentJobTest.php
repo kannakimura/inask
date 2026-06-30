@@ -1,0 +1,135 @@
+<?php
+
+namespace Tests\Unit\Jobs;
+
+use App\Jobs\ProcessDocumentJob;
+use App\Models\Document;
+use App\Services\ChunkSplitterService;
+use App\Services\EmbeddingService;
+use App\Services\TextExtractorService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Tests\TestCase;
+
+class ProcessDocumentJobTest extends TestCase
+{
+    use RefreshDatabase;
+
+    // handle()が正常に完了するとステータスがdoneになる
+    public function test_handle_updates_status_to_done_on_success(): void
+    {
+        Storage::fake('local');
+
+        $document = Document::factory()->create([
+            'status'    => config('inask.document_status.pending'),
+            'mime_type' => 'text/plain',
+            'file_path' => 'documents/test.txt',
+        ]);
+
+        // ファイルをfakeストレージに配置する
+        Storage::disk('local')->put('documents/test.txt', 'テストコンテンツ');
+
+        $textExtractor = $this->createMock(TextExtractorService::class);
+        $textExtractor->method('extract')->willReturn('テストコンテンツ');
+
+        $chunkSplitter = $this->createMock(ChunkSplitterService::class);
+        $chunkSplitter->method('split')->willReturn(['チャンク1']);
+
+        $embeddingService = $this->createMock(EmbeddingService::class);
+        $embeddingService->expects($this->once())->method('embedAndSave');
+
+        $job = new ProcessDocumentJob($document);
+        $job->handle($textExtractor, $chunkSplitter, $embeddingService);
+
+        // ステータスがdoneに更新されているか確認する
+        $this->assertSame(config('inask.document_status.done'), $document->fresh()->status);
+    }
+
+    // handle()はprocessing→doneの順でステータスを更新する
+    public function test_handle_sets_processing_status_before_done(): void
+    {
+        Storage::fake('local');
+
+        $document = Document::factory()->create([
+            'status'    => config('inask.document_status.pending'),
+            'mime_type' => 'text/plain',
+            'file_path' => 'documents/test.txt',
+        ]);
+
+        Storage::disk('local')->put('documents/test.txt', 'テストコンテンツ');
+
+        $statusDuringProcessing = null;
+
+        $textExtractor = $this->createMock(TextExtractorService::class);
+        // extract()呼び出し時点のステータスを記録する
+        $textExtractor->method('extract')->willReturnCallback(function () use ($document, &$statusDuringProcessing) {
+            $statusDuringProcessing = $document->fresh()->status;
+            return 'テストコンテンツ';
+        });
+
+        $chunkSplitter = $this->createMock(ChunkSplitterService::class);
+        $chunkSplitter->method('split')->willReturn(['チャンク1']);
+
+        $embeddingService = $this->createMock(EmbeddingService::class);
+
+        $job = new ProcessDocumentJob($document);
+        $job->handle($textExtractor, $chunkSplitter, $embeddingService);
+
+        // 処理中はprocessingになっていたことを確認する
+        $this->assertSame(config('inask.document_status.processing'), $statusDuringProcessing);
+        // 完了後はdoneになっていることを確認する
+        $this->assertSame(config('inask.document_status.done'), $document->fresh()->status);
+    }
+
+    // 処理中に例外が発生した場合はステータスがfailedになり例外が再スローされる
+    public function test_handle_updates_status_to_failed_on_error(): void
+    {
+        Storage::fake('local');
+
+        $document = Document::factory()->create([
+            'status'    => config('inask.document_status.pending'),
+            'mime_type' => 'text/plain',
+            'file_path' => 'documents/test.txt',
+        ]);
+
+        Storage::disk('local')->put('documents/test.txt', 'テストコンテンツ');
+
+        $textExtractor = $this->createMock(TextExtractorService::class);
+        $textExtractor->method('extract')->willThrowException(new \RuntimeException('抽出エラー'));
+
+        $chunkSplitter    = $this->createMock(ChunkSplitterService::class);
+        $embeddingService = $this->createMock(EmbeddingService::class);
+
+        $job = new ProcessDocumentJob($document);
+
+        try {
+            $job->handle($textExtractor, $chunkSplitter, $embeddingService);
+            $this->fail('例外が発生しませんでした');
+        } catch (\RuntimeException $e) {
+            $this->assertSame('抽出エラー', $e->getMessage());
+        }
+
+        // ステータスがfailedに更新されているか確認する
+        $this->assertSame(config('inask.document_status.failed'), $document->fresh()->status);
+    }
+
+    // store()後にProcessDocumentJobがdispatchされる
+    public function test_store_dispatches_process_document_job(): void
+    {
+        \Illuminate\Support\Facades\Queue::fake();
+
+        $file = \Illuminate\Http\UploadedFile::fake()->create('test.txt', 10, 'text/plain');
+
+        $service  = app(\App\Services\DocumentService::class);
+        $document = $service->store($file);
+
+        \Illuminate\Support\Facades\Queue::assertPushed(ProcessDocumentJob::class, function ($job) use ($document) {
+            // リフレクションでprivateプロパティを確認する
+            $ref = new \ReflectionClass($job);
+            $prop = $ref->getProperty('document');
+            $prop->setAccessible(true);
+            return $prop->getValue($job)->id === $document->id;
+        });
+    }
+}
