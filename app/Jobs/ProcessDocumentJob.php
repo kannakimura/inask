@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Jobs\GenerateFaqsJob;
 use App\Models\Document;
 use App\Services\ChunkSplitterService;
 use App\Services\EmbeddingService;
@@ -60,6 +61,9 @@ class ProcessDocumentJob implements ShouldQueue
 
             // すべて完了したらステータスをdoneに更新する
             $this->document->update(['status' => config('inask.document_status.done')]);
+
+            // FAQ自動生成Jobをdispatchする（ベクトル化完了後にChunkが揃った状態で実行するため）
+            GenerateFaqsJob::dispatch($this->document);
 
             Log::info(config('errors.process_document.completed'), [
                 'document_id' => $this->document->id,
