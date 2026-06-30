@@ -44,6 +44,32 @@ class EmbeddingServiceTest extends TestCase
         ]);
     }
 
+    // 空チャンク配列を渡した場合は既存データを削除せず例外を投げる
+    public function test_embed_and_save_throws_on_empty_chunks(): void
+    {
+        $document = Document::factory()->create();
+
+        // 事前にChunkを作成しておく（既存データが消えないことを確認するため）
+        \App\Models\Chunk::factory()->create([
+            'document_id'    => $document->id,
+            'document_title' => $document->title,
+            'chunk_index'    => 0,
+        ]);
+
+        $voyageClient = $this->createMock(VoyageClient::class);
+        $voyageClient->expects($this->never())->method('embed');
+
+        $service = new EmbeddingService($voyageClient);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage(config('errors.embedding.empty_chunks'));
+
+        $service->embedAndSave($document, []);
+
+        // 既存Chunkが削除されていないことを確認する
+        $this->assertDatabaseCount('chunks', 1);
+    }
+
     // VoyageClientが例外を投げた場合はDBに保存されない
     public function test_embed_and_save_aborts_on_voyage_error(): void
     {
