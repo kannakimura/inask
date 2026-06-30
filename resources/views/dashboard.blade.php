@@ -94,60 +94,85 @@
                         <p class="text-gray-500 text-sm">アップロードされたドキュメントはありません。</p>
                     @else
                         @php
-                            // 削除カラム表示判定をループ外で一度だけ行う
+                            // 削除ボタン表示判定をループ外で一度だけ行う
                             $isAdmin = auth()->user()?->is_admin ?? false;
                         @endphp
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead>
-                                <tr>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ファイル名</th>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">種別</th>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ステータス</th>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">登録日時</th>
-                                    @if ($isAdmin)
-                                        <th class="px-4 py-3"></th>
-                                    @endif
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-100">
-                                @foreach ($documents as $document)
-                                    <tr>
-                                        <td class="px-4 py-3 text-sm text-gray-900">{{ $document->title }}</td>
-                                        <td class="px-4 py-3 text-sm text-gray-500">{{ $document->mime_type }}</td>
-                                        <td class="px-4 py-3 text-sm">
-                                            {{-- ステータスバッジ --}}
-                                            @php
-                                                $badgeClass = match($document->status) {
-                                                    'done'       => 'bg-green-100 text-green-800',
-                                                    'processing' => 'bg-yellow-100 text-yellow-800',
-                                                    'failed'     => 'bg-red-100 text-red-800',
-                                                    default      => 'bg-gray-100 text-gray-800',
-                                                };
-                                                $statusLabel = match($document->status) {
-                                                    'done'       => '完了',
-                                                    'processing' => '処理中',
-                                                    'failed'     => '失敗',
-                                                    default      => '待機中',
-                                                };
-                                            @endphp
-                                            <span class="inline-flex px-2 py-0.5 rounded text-xs font-medium {{ $badgeClass }}">
+
+                        <div class="space-y-4">
+                            @foreach ($documents as $document)
+                                @php
+                                    $badgeClass = match($document->status) {
+                                        'done'       => 'bg-green-100 text-green-800',
+                                        'processing' => 'bg-yellow-100 text-yellow-800',
+                                        'failed'     => 'bg-red-100 text-red-800',
+                                        default      => 'bg-gray-100 text-gray-800',
+                                    };
+                                    $statusLabel = match($document->status) {
+                                        'done'       => '完了',
+                                        'processing' => '処理中',
+                                        'failed'     => '失敗',
+                                        default      => '待機中',
+                                    };
+                                @endphp
+
+                                {{-- ドキュメントカード --}}
+                                <div class="border border-gray-200 rounded-lg overflow-hidden">
+
+                                    {{-- カードヘッダー（ドキュメント情報） --}}
+                                    <div class="flex items-center justify-between px-4 py-3 bg-gray-50">
+                                        <div class="flex items-center gap-3 min-w-0">
+                                            <span class="text-sm font-medium text-gray-900 truncate">{{ $document->title }}</span>
+                                            <span class="hidden sm:inline text-xs text-gray-400 shrink-0">{{ $document->mime_type }}</span>
+                                            <span class="inline-flex px-2 py-0.5 rounded text-xs font-medium shrink-0 {{ $badgeClass }}">
                                                 {{ $statusLabel }}
                                             </span>
-                                        </td>
-                                        <td class="px-4 py-3 text-sm text-gray-500">{{ $document->created_at->format('Y/m/d H:i') }}</td>
+                                            <span class="hidden sm:inline text-xs text-gray-400 shrink-0">{{ $document->created_at->format('Y/m/d H:i') }}</span>
+                                        </div>
                                         @if ($isAdmin)
-                                            <td class="px-4 py-3 text-right">
-                                                <form method="POST" action="{{ route('documents.destroy', $document) }}" onsubmit="return confirm('削除しますか？')">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="text-xs text-red-600 hover:text-red-800 font-medium">削除</button>
-                                                </form>
-                                            </td>
+                                            <form method="POST" action="{{ route('documents.destroy', $document) }}" onsubmit="return confirm('削除しますか？')" class="ml-4 shrink-0">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="text-xs text-red-600 hover:text-red-800 font-medium">削除</button>
+                                            </form>
                                         @endif
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                                    </div>
+
+                                    {{-- FAQセクション --}}
+                                    <div class="px-4 py-3">
+                                        @if ($document->status === config('inask.document_status.done'))
+                                            @if ($document->faqs->isEmpty())
+                                                {{-- done済みだがFAQ未生成（生成ジョブが未完了または失敗） --}}
+                                                <p class="text-xs text-gray-400">FAQはまだ生成されていません。</p>
+                                            @else
+                                                {{-- FAQアコーディオン（details/summaryでJSなし実装） --}}
+                                                <div class="space-y-1" data-faq-section>
+                                                    @foreach ($document->faqs as $faq)
+                                                        <details class="group border border-gray-100 rounded">
+                                                            <summary class="flex items-center justify-between px-3 py-2 cursor-pointer select-none list-none text-sm font-medium text-gray-800 hover:bg-gray-50 rounded">
+                                                                <span>{{ $faq->question }}</span>
+                                                                {{-- 開閉アイコン --}}
+                                                                <svg class="w-4 h-4 text-gray-400 shrink-0 ml-2 transition-transform group-open:rotate-180" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                                                                </svg>
+                                                            </summary>
+                                                            <div class="px-3 py-2 text-sm text-gray-600 border-t border-gray-100 bg-white">
+                                                                {{ $faq->answer }}
+                                                            </div>
+                                                        </details>
+                                                    @endforeach
+                                                </div>
+                                            @endif
+                                        @elseif ($document->status === config('inask.document_status.failed'))
+                                            <p class="text-xs text-red-400">処理に失敗したため、FAQを生成できませんでした。</p>
+                                        @else
+                                            {{-- pending / processing --}}
+                                            <p class="text-xs text-gray-400">ベクトル化処理が完了するとFAQが表示されます。</p>
+                                        @endif
+                                    </div>
+
+                                </div>
+                            @endforeach
+                        </div>
 
                         {{-- ページネーションリンク --}}
                         @if ($documents->hasPages())
