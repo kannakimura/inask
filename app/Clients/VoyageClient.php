@@ -63,6 +63,21 @@ class VoyageClient
             // （Voyage APIはindex順に返すとは保証していないため）
             usort($data, fn($a, $b) => $a['index'] <=> $b['index']);
 
+            // indexが0..n-1を過不足なく持つことを検証する（欠番・重複対策）
+            // 外部APIの壊れたレスポンスで異なるチャンクのembeddingを誤った位置に保存するのを防ぐ
+            $actualIndexes   = array_column($data, 'index');
+            $expectedIndexes = range(0, count($texts) - 1);
+            if ($actualIndexes !== $expectedIndexes) {
+                throw new RuntimeException(config('errors.voyage.invalid_response'));
+            }
+
+            // 各embeddingが配列であることを確認する
+            foreach ($data as $item) {
+                if (!is_array($item['embedding'] ?? null)) {
+                    throw new RuntimeException(config('errors.voyage.invalid_response'));
+                }
+            }
+
             return array_column($data, 'embedding');
         } catch (RequestException | ConnectionException $e) {
             // HTTPエラーと接続失敗を同じRuntimeExceptionに変換して上位に伝える
