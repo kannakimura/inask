@@ -13,11 +13,14 @@ class DocumentController extends Controller
     {
     }
 
-    // ダッシュボード兼ドキュメント一覧を表示する
+    // ダッシュボード兼ドキュメント一覧を表示する（adminのみ閲覧可）
     public function index()
     {
-        // 全ドキュメントを新しい順に取得してダッシュボードに渡す
-        $documents = Document::latest()->get();
+        // ドキュメント管理はadmin専用機能のため非adminは403を返す
+        $this->authorize('viewAny', Document::class);
+
+        // 新しい順にページネーションして取得する
+        $documents = Document::latest()->paginate(20);
 
         return view('dashboard', compact('documents'));
     }

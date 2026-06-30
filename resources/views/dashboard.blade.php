@@ -125,6 +125,13 @@
                                 @endforeach
                             </tbody>
                         </table>
+
+                        {{-- ページネーションリンク --}}
+                        @if ($documents->hasPages())
+                            <div class="mt-4">
+                                {{ $documents->links() }}
+                            </div>
+                        @endif
                     @endif
                 </div>
             </div>
