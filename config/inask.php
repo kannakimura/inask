@@ -8,6 +8,22 @@ return [
         'failed'     => 'failed',
     ],
 
+    // ステータスの表示ラベル（UI表示用）
+    'document_status_labels' => [
+        'pending'    => '待機中',
+        'processing' => '処理中',
+        'done'       => '完了',
+        'failed'     => '失敗',
+    ],
+
+    // ステータスバッジのTailwindクラス（UI表示用）
+    'document_status_badge_classes' => [
+        'pending'    => 'bg-gray-100 text-gray-800',
+        'processing' => 'bg-yellow-100 text-yellow-800',
+        'done'       => 'bg-green-100 text-green-800',
+        'failed'     => 'bg-red-100 text-red-800',
+    ],
+
     // アップロード可能な最大ファイルサイズ（KB単位）
     // max_chunksと整合させる: max_chunks(500) × (chunk.size-overlap)(450文字) ≈ 225,000文字 ≈ 220KB
     // この値を超えると ProcessDocumentJob が too_many_chunks で必ず failed になるため

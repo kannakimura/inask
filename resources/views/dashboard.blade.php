@@ -101,18 +101,11 @@
                         <div class="space-y-4">
                             @foreach ($documents as $document)
                                 @php
-                                    $badgeClass = match($document->status) {
-                                        'done'       => 'bg-green-100 text-green-800',
-                                        'processing' => 'bg-yellow-100 text-yellow-800',
-                                        'failed'     => 'bg-red-100 text-red-800',
-                                        default      => 'bg-gray-100 text-gray-800',
-                                    };
-                                    $statusLabel = match($document->status) {
-                                        'done'       => '完了',
-                                        'processing' => '処理中',
-                                        'failed'     => '失敗',
-                                        default      => '待機中',
-                                    };
+                                    // ステータスのラベルとバッジクラスをconfigから取得する
+                                    $statusLabels      = config('inask.document_status_labels', []);
+                                    $statusBadgeClasses = config('inask.document_status_badge_classes', []);
+                                    $statusLabel = $statusLabels[$document->status] ?? $document->status;
+                                    $badgeClass  = $statusBadgeClasses[$document->status] ?? 'bg-gray-100 text-gray-800';
                                 @endphp
 
                                 {{-- ドキュメントカード --}}
