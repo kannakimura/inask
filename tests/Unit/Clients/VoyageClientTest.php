@@ -65,6 +65,22 @@ class VoyageClientTest extends TestCase
         $client->embed('テスト');
     }
 
+    // 接続失敗（タイムアウト・DNS障害など）の場合も同じ例外経路になる
+    public function test_embed_throws_exception_on_connection_failure(): void
+    {
+        config(['services.voyage.api_key' => 'test-key']);
+
+        Http::fake(function () {
+            throw new \Illuminate\Http\Client\ConnectionException('Connection timed out');
+        });
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage(config('errors.voyage.request_failed'));
+
+        $client = new VoyageClient();
+        $client->embed('テスト');
+    }
+
     // レスポンスにembeddingが含まれない場合は例外を投げる
     public function test_embed_throws_exception_on_invalid_response(): void
     {

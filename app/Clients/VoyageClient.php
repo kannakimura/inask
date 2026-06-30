@@ -2,6 +2,7 @@
 
 namespace App\Clients;
 
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
@@ -45,7 +46,7 @@ class VoyageClient
             }
 
             return $embedding;
-        } catch (RequestException $e) {
+        } catch (RequestException | ConnectionException $e) {
             throw new RuntimeException(
                 config('errors.voyage.request_failed') . ': ' . $e->getMessage(),
                 previous: $e,
