@@ -105,4 +105,48 @@ class VoyageClientTest extends TestCase
         $client = new VoyageClient();
         $client->embedBatch(['テキスト1', 'テキスト2']);
     }
+
+    // indexが重複している場合は不正レスポンスとして例外を投げる
+    public function test_embed_batch_throws_exception_on_duplicate_index(): void
+    {
+        config(['services.voyage.api_key' => 'test-key']);
+
+        $vector = array_fill(0, 1024, 0.1);
+        Http::fake([
+            'api.voyageai.com/*' => Http::response([
+                'data' => [
+                    ['index' => 0, 'embedding' => $vector],
+                    ['index' => 0, 'embedding' => $vector], // indexが重複している
+                ],
+            ], 200),
+        ]);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage(config('errors.voyage.invalid_response'));
+
+        $client = new VoyageClient();
+        $client->embedBatch(['テキスト1', 'テキスト2']);
+    }
+
+    // indexに欠番がある場合は不正レスポンスとして例外を投げる
+    public function test_embed_batch_throws_exception_on_missing_index(): void
+    {
+        config(['services.voyage.api_key' => 'test-key']);
+
+        $vector = array_fill(0, 1024, 0.1);
+        Http::fake([
+            'api.voyageai.com/*' => Http::response([
+                'data' => [
+                    ['index' => 0, 'embedding' => $vector],
+                    ['index' => 2, 'embedding' => $vector], // index=1が欠番
+                ],
+            ], 200),
+        ]);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage(config('errors.voyage.invalid_response'));
+
+        $client = new VoyageClient();
+        $client->embedBatch(['テキスト1', 'テキスト2']);
+    }
 }
