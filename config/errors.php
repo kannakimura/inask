@@ -63,6 +63,15 @@ return [
         'query_max'      => '検索キーワードは200文字以内で入力してください。',
     ],
 
+    // ダッシュボード表示関連のメッセージ
+    'dashboard' => [
+        'no_documents'        => 'まだドキュメントがありません',
+        'no_documents_hint'   => 'PDFやテキストファイルを登録すると、自動でFAQが生成されます',
+        'faq_not_generated'   => 'FAQはまだ生成されていません',
+        'faq_failed'          => '処理に失敗しました。再アップロードをお試しください',
+        'faq_processing'      => 'ベクトル化処理中です。しばらくお待ちください',
+    ],
+
     // GenerateFaqsJob関連のメッセージ
     'generate_faqs' => [
         'completed' => 'FAQの自動生成が完了しました',
