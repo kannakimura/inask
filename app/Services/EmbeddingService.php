@@ -23,12 +23,10 @@ class EmbeddingService
             throw new \InvalidArgumentException(config('errors.embedding.empty_chunks'));
         }
 
-        // トランザクション外で全チャンクのembeddingを取得する
+        // トランザクション外で全チャンクのembeddingを一括取得する
         // （外部APIをトランザクション内で待つとDB接続を長時間占有するため）
-        $embeddings = [];
-        foreach ($chunks as $index => $content) {
-            $embeddings[$index] = $this->voyageClient->embed($content);
-        }
+        // embedBatch()で1リクエストにまとめることで直列呼び出しのタイムアウトを防ぐ
+        $embeddings = $this->voyageClient->embedBatch(array_values($chunks));
 
         // 全embedding取得後に短いトランザクションでdelete/insertする
         DB::transaction(function () use ($document, $chunks, $embeddings) {
@@ -39,7 +37,7 @@ class EmbeddingService
             // 既存チャンクを削除してから保存する（再処理時の重複防止）
             $document->chunks()->delete();
 
-            foreach ($chunks as $index => $content) {
+            foreach (array_values($chunks) as $index => $content) {
                 $embedding = $embeddings[$index];
 
                 // 各要素がfloatであることを検証する（外部APIの壊れたレスポンス対策）
