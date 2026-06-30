@@ -30,12 +30,17 @@ class ChunkSplitterService
         $start  = 0;
 
         while ($start < $length) {
-            $chunk = mb_substr($normalized, $start, $this->chunkSize);
+            $chunk    = mb_substr($normalized, $start, $this->chunkSize);
             $chunks[] = $chunk;
 
             // 次の開始位置をchunkSize - overlapだけ進める
             $step  = $this->chunkSize - $this->overlap;
             $start += $step > 0 ? $step : 1;
+
+            // 残りがoverlap以下の場合は重複チャンクになるため終了する
+            if ($length - $start <= $this->overlap) {
+                break;
+            }
         }
 
         return $chunks;

@@ -38,15 +38,36 @@ class ChunkSplitterServiceTest extends TestCase
         $this->assertSame('これは短いテキストです。', $chunks[0]);
     }
 
-    // chunkSizeを超えるテキストは複数チャンクに分割される
+    // chunkSizeを大幅に超えるテキストは複数チャンクに分割される
     public function test_long_text_is_split_into_multiple_chunks(): void
     {
-        // chunkSize=500, overlap=50 の設定で600文字のテキストを作る
-        $text   = str_repeat('あ', 600);
+        // chunkSize=500, overlap=50 の設定で1100文字のテキストを作る
+        $text   = str_repeat('あ', 1100);
         $chunks = $this->service->split($text);
 
-        // 600文字 → チャンク1: 0-499, チャンク2: 450-599 の2チャンク
         $this->assertGreaterThan(1, count($chunks));
+    }
+
+    // 次の開始位置からoverlap以下しか残らない場合は重複チャンクを生成しない
+    public function test_no_duplicate_chunk_when_remainder_is_within_overlap(): void
+    {
+        $chunkSize = (int) config('inask.chunk.size', 500);
+        $overlap   = (int) config('inask.chunk.overlap', 50);
+        $step      = $chunkSize - $overlap; // 450
+
+        // $step + $overlap = $chunkSize(500)文字のとき：
+        // チャンク1追加後 $start=450、$length-$start=50<=overlap → break → 1チャンク
+        $text   = str_repeat('a', $chunkSize);
+        $chunks = $this->service->split($text);
+
+        $this->assertCount(1, $chunks);
+
+        // $step + $overlap + 1 = 501文字のとき：
+        // チャンク1追加後 $start=450、$length-$start=51>overlap → 継続 → 2チャンク
+        $text2   = str_repeat('a', $chunkSize + 1);
+        $chunks2 = $this->service->split($text2);
+
+        $this->assertCount(2, $chunks2);
     }
 
     // 各チャンクの長さはchunkSize以下である
