@@ -1,58 +1,171 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Innask
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+社内ドキュメントから FAQ を自動生成し、自然言語で検索できる RAG（Retrieval-Augmented Generation）ツールのデモアプリケーションです。
 
-## About Laravel
+> **このアプリはデモ用途で作成されています。**  
+> 面接・ポートフォリオ・学習目的での利用を想定しており、本番運用には対応していません。
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 機能
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- **ドキュメントアップロード**（PDF・テキスト・Markdown）
+- **自動チャンキング＋ベクトル埋め込み**（Voyage AI）
+- **FAQ 自動生成**（Claude API）
+- **RAG 検索**：質問文を入力すると関連チャンクを検索し、Claude が回答を生成
+- **デモデータ**：`php artisan db:seed` 一発でサンプルドキュメント3件が投入済みの状態になります
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## 技術スタック
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+| 種別 | 使用技術 |
+|---|---|
+| バックエンド | Laravel 11 / PHP 8.3 |
+| データベース | PostgreSQL 16 + pgvector |
+| キャッシュ・キュー | Redis |
+| フロントエンド | Blade / Tailwind CSS |
+| AI（埋め込み） | Voyage AI (`voyage-3`) |
+| AI（回答生成） | Anthropic Claude (`claude-sonnet-4-6`) |
+| インフラ | Docker / Docker Compose |
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+---
 
-## Agentic Development
+## 事前準備
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+以下のものを用意してください。
+
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) がインストール済みであること
+- **Voyage AI の API キー**（[voyageai.com](https://www.voyageai.com/) で取得）
+- **Anthropic の API キー**（[console.anthropic.com](https://console.anthropic.com/) で取得）
+
+---
+
+## セットアップ手順
+
+### 1. リポジトリをクローン
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+git clone https://github.com/kannakimura/inask.git
+cd inask
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+### 2. 環境変数ファイルを作成
 
-## Contributing
+```bash
+cp src/.env.example src/.env
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+`src/.env` をエディタで開き、以下の2行に取得した API キーを入力してください。
 
-## Code of Conduct
+```env
+VOYAGE_API_KEY=your_voyage_api_key_here
+ANTHROPIC_API_KEY=your_anthropic_api_key_here
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+その他の値（DB・Redis など）はデフォルトのままで動作します。
 
-## Security Vulnerabilities
+### 3. Docker コンテナを起動
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```bash
+docker compose -f docker/docker-compose.yml up -d --build
+```
 
-## License
+初回はイメージのビルドに数分かかります。
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### 4. Composer パッケージをインストール
+
+```bash
+docker compose -f docker/docker-compose.yml exec app composer install
+```
+
+### 5. アプリケーションキーを生成
+
+```bash
+docker compose -f docker/docker-compose.yml exec app php artisan key:generate
+```
+
+### 6. データベースのマイグレーション
+
+```bash
+docker compose -f docker/docker-compose.yml exec app php artisan migrate
+```
+
+### 7. デモデータを投入
+
+Voyage AI でベクトルを生成しながら3件のサンプルドキュメントを投入します（約30秒かかります）。
+
+```bash
+docker compose -f docker/docker-compose.yml exec app php artisan db:seed
+```
+
+投入されるデモデータ：
+- 就業規則（有給休暇・フレックス・テレワークなど）
+- 経費精算ガイドライン（精算フロー・交通費・接待費など）
+- オンボーディングガイド（入社初日・使用ツール・福利厚生など）
+
+### 8. フロントエンドビルド
+
+```bash
+docker compose -f docker/docker-compose.yml exec app npm install
+docker compose -f docker/docker-compose.yml exec app npm run build
+```
+
+### 9. ブラウザでアクセス
+
+[http://localhost:8080](http://localhost:8080) を開いてください。
+
+---
+
+## ログイン情報
+
+デモ用アカウントは `db:seed` で自動作成されます。
+
+| 項目 | 値 |
+|---|---|
+| メールアドレス | `demo@innask.local` |
+| パスワード | `password` |
+
+---
+
+## 使い方
+
+### ドキュメントをアップロードする（管理者のみ）
+
+1. ログイン後、ダッシュボードに表示されるアップロードフォームからファイルを選択
+2. 「アップロード」ボタンをクリック
+3. バックグラウンドで自動処理が始まります（ベクトル化 → FAQ生成）
+4. ステータスが「完了」になると FAQ が表示されます（ページは自動リロードされます）
+
+対応ファイル形式：PDF・テキスト（.txt）・Markdown（.md）
+
+### 社内ドキュメントを検索する
+
+1. ナビゲーションの「検索」をクリック
+2. 質問文を入力して「検索」ボタンをクリック
+   - 例：「有給休暇の申請方法は？」
+   - 例：「経費精算の締め日はいつ？」
+3. 関連ドキュメントから AI が回答を生成します
+4. 回答下部の「参照ドキュメント」から出典チャンクを確認できます
+
+---
+
+## テストの実行
+
+```bash
+docker compose -f docker/docker-compose.yml exec app php artisan test
+```
+
+---
+
+## コンテナの停止
+
+```bash
+docker compose -f docker/docker-compose.yml down
+```
+
+データベースのデータも含めて完全にリセットする場合：
+
+```bash
+docker compose -f docker/docker-compose.yml down -v
+```
