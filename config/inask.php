@@ -24,8 +24,10 @@ return [
     ],
 
     'embedding' => [
-        'model'   => 'voyage-3',
+        'model'      => 'voyage-3',
         'dimensions' => 1024,
+        // Voyage APIのinput上限は1000件のため余裕をもって128件に設定する
+        'batch_size' => 128,
     ],
 
     'search' => [
