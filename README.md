@@ -13,7 +13,7 @@
 - **自動チャンキング＋ベクトル埋め込み**（Voyage AI）
 - **FAQ 自動生成**（Claude API）
 - **RAG 検索**：質問文を入力すると関連チャンクを検索し、Claude が回答を生成
-- **デモデータ**：`php artisan db:seed` 一発でサンプルドキュメント3件が投入済みの状態になります
+- **デモデータ**：`php artisan db:seed` 一発でサンプルドキュメント3件が投入できます
 
 ---
 
@@ -43,20 +43,32 @@
 
 ## セットアップ手順
 
-### 1. リポジトリをクローン
+### 1. Docker 設定リポジトリをクローン
 
 ```bash
-git clone https://github.com/kannakimura/inask.git
-cd inask
+git clone https://github.com/kannakimura/inask-docker.git
+cd inask-docker
 ```
 
-### 2. 環境変数ファイルを作成
+### 2. セットアップスクリプトを実行
+
+アプリ本体のクローンと `.env` ファイルの作成を自動で行います。
 
 ```bash
-cp src/.env.example src/.env
+./setup.sh
 ```
 
-`src/.env` をエディタで開き、以下の2行に取得した API キーを入力してください。
+実行後のディレクトリ構成：
+
+```
+任意のディレクトリ/
+├── inask-docker/   ← Docker 設定（今いる場所）
+└── inask/          ← Laravel アプリ本体（自動生成）
+```
+
+### 3. API キーを設定
+
+`../inask/.env` をエディタで開き、以下の2行に取得した API キーを入力してください。
 
 ```env
 VOYAGE_API_KEY=your_voyage_api_key_here
@@ -65,38 +77,40 @@ ANTHROPIC_API_KEY=your_anthropic_api_key_here
 
 その他の値（DB・Redis など）はデフォルトのままで動作します。
 
-### 3. Docker コンテナを起動
+### 4. Docker コンテナを起動
+
+`inask-docker/` ディレクトリ内で実行してください。
 
 ```bash
-docker compose -f docker/docker-compose.yml up -d --build
+docker compose up -d --build
 ```
 
 初回はイメージのビルドに数分かかります。
 
-### 4. Composer パッケージをインストール
+### 5. Composer パッケージをインストール
 
 ```bash
-docker compose -f docker/docker-compose.yml exec app composer install
+docker compose exec app composer install
 ```
 
-### 5. アプリケーションキーを生成
+### 6. アプリケーションキーを生成
 
 ```bash
-docker compose -f docker/docker-compose.yml exec app php artisan key:generate
+docker compose exec app php artisan key:generate
 ```
 
-### 6. データベースのマイグレーション
+### 7. データベースのマイグレーション
 
 ```bash
-docker compose -f docker/docker-compose.yml exec app php artisan migrate
+docker compose exec app php artisan migrate
 ```
 
-### 7. デモデータを投入
+### 8. デモデータを投入
 
 Voyage AI でベクトルを生成しながら3件のサンプルドキュメントを投入します（約30秒かかります）。
 
 ```bash
-docker compose -f docker/docker-compose.yml exec app php artisan db:seed
+docker compose exec app php artisan db:seed
 ```
 
 投入されるデモデータ：
@@ -104,14 +118,14 @@ docker compose -f docker/docker-compose.yml exec app php artisan db:seed
 - 経費精算ガイドライン（精算フロー・交通費・接待費など）
 - オンボーディングガイド（入社初日・使用ツール・福利厚生など）
 
-### 8. フロントエンドビルド
+### 9. フロントエンドビルド
 
 ```bash
-docker compose -f docker/docker-compose.yml exec app npm install
-docker compose -f docker/docker-compose.yml exec app npm run build
+docker compose exec app npm install
+docker compose exec app npm run build
 ```
 
-### 9. ブラウザでアクセス
+### 10. ブラウザでアクセス
 
 [http://localhost:8080](http://localhost:8080) を開いてください。
 
@@ -152,8 +166,10 @@ docker compose -f docker/docker-compose.yml exec app npm run build
 
 ## テストの実行
 
+`inask-docker/` ディレクトリ内で実行してください。
+
 ```bash
-docker compose -f docker/docker-compose.yml exec app php artisan test
+docker compose exec app php artisan test
 ```
 
 ---
@@ -161,11 +177,11 @@ docker compose -f docker/docker-compose.yml exec app php artisan test
 ## コンテナの停止
 
 ```bash
-docker compose -f docker/docker-compose.yml down
+docker compose down
 ```
 
 データベースのデータも含めて完全にリセットする場合：
 
 ```bash
-docker compose -f docker/docker-compose.yml down -v
+docker compose down -v
 ```
