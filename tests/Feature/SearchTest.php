@@ -133,4 +133,43 @@ class SearchTest extends TestCase
 
         $response->assertRedirect(route('login'));
     }
+
+    // ナビゲーションに「検索」リンクが表示される
+    public function test_navigation_shows_search_link(): void
+    {
+        $this->withoutVite();
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->get(route('dashboard'));
+
+        $response->assertStatus(200);
+        $response->assertSee(route('search.index'));
+    }
+
+    // 検索ページで出典件数が表示される
+    public function test_search_shows_source_count(): void
+    {
+        $this->withoutVite();
+        $user = User::factory()->create();
+
+        $sources = [
+            new SearchResult(chunkId: 1, documentId: 1, documentTitle: '資料A.pdf', content: '内容A', distance: 0.1),
+            new SearchResult(chunkId: 2, documentId: 1, documentTitle: '資料A.pdf', content: '内容B', distance: 0.2),
+        ];
+        $answerResult = new AnswerResult(answer: '回答テキスト', sources: $sources);
+
+        $this->mock(SearchService::class)
+            ->shouldReceive('search')
+            ->andReturn($sources);
+
+        $this->mock(AnswerGeneratorService::class)
+            ->shouldReceive('generate')
+            ->andReturn($answerResult);
+
+        $response = $this->actingAs($user)->post(route('search.query'), ['query' => 'テスト']);
+
+        $response->assertStatus(200);
+        // 出典件数が表示されることを確認する
+        $response->assertSee('参照ドキュメント（2件）');
+    }
 }
