@@ -43,4 +43,11 @@ return [
         'request_failed'   => 'Claude APIへのリクエストに失敗しました',
         'invalid_response' => 'Claude APIから不正なレスポンスが返されました',
     ],
+
+    // FaqGeneratorService関連のエラーメッセージ
+    'faq_generator' => [
+        'empty_chunks'     => 'チャンクが空のためFAQを生成できません',
+        'invalid_json'     => 'Claude APIのレスポンスをJSONとしてパースできませんでした',
+        'invalid_format'   => 'Claude APIのレスポンスに必要なquestion/answerフィールドがありません',
+    ],
 ];
