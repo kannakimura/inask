@@ -101,6 +101,20 @@ class ProcessDocumentJobTest extends TestCase
         $this->assertSame(config('inask.document_status.failed'), $document->fresh()->status);
     }
 
+    // queueレベルの失敗（worker kill等）でもステータスがfailedになる
+    public function test_failed_updates_status_to_failed(): void
+    {
+        $document = Document::factory()->create([
+            'status' => config('inask.document_status.processing'),
+        ]);
+
+        $job = new ProcessDocumentJob($document);
+        $job->failed(new \RuntimeException('workerがkillされました'));
+
+        // failed()でもステータスがfailedに更新されているか確認する
+        $this->assertSame(config('inask.document_status.failed'), $document->fresh()->status);
+    }
+
     // store()後にProcessDocumentJobがdispatchされる
     public function test_store_dispatches_process_document_job(): void
     {
