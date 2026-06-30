@@ -5,8 +5,9 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SearchController;
 use Illuminate\Support\Facades\Route;
 
+// トップページはログインページにリダイレクト
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('login');
 });
 
 // ダッシュボードはドキュメント一覧を兼ねるためControllerに委譲する

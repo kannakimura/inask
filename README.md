@@ -127,7 +127,7 @@ docker compose exec app npm run build
 
 ### 10. ブラウザでアクセス
 
-[http://localhost:8080](http://localhost:8080) を開いてください。
+[http://localhost:8080/login](http://localhost:8080/login) を開いてください。
 
 ---
 
