@@ -47,7 +47,7 @@ class TextExtractorServiceTest extends TestCase
         Storage::disk('local')->put('documents/test.jpg', 'dummy');
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('未対応のMIMEタイプです');
+        $this->expectExceptionMessage(config('errors.extract.unsupported_mime'));
 
         $this->service->extract('documents/test.jpg', 'image/jpeg');
     }

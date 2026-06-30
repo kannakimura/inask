@@ -16,7 +16,7 @@ class TextExtractorService
         return match (true) {
             $mimeType === 'application/pdf'              => $this->extractFromPdf($absolutePath),
             in_array($mimeType, ['text/plain', 'text/markdown'], true) => $this->extractFromText($absolutePath),
-            default => throw new RuntimeException("未対応のMIMEタイプです: {$mimeType}"),
+            default => throw new RuntimeException(config('errors.extract.unsupported_mime') . ": {$mimeType}"),
         };
     }
 
@@ -35,7 +35,7 @@ class TextExtractorService
         $content = file_get_contents($absolutePath);
 
         if ($content === false) {
-            throw new RuntimeException("ファイルの読み込みに失敗しました: {$absolutePath}");
+            throw new RuntimeException(config('errors.extract.read_failed') . ": {$absolutePath}");
         }
 
         return $content;
