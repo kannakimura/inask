@@ -16,7 +16,7 @@
                         {{ __('Dashboard') }}
                     </x-nav-link>
                     <x-nav-link :href="route('search.index')" :active="request()->routeIs('search.*')">
-                        検索
+                        {{ config('messages.search.nav_link') }}
                     </x-nav-link>
                 </div>
             </div>
