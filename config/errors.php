@@ -50,4 +50,11 @@ return [
         'invalid_json'     => 'Claude APIのレスポンスをJSONとしてパースできませんでした',
         'invalid_format'   => 'Claude APIのレスポンスに必要なquestion/answerフィールドがありません',
     ],
+
+    // GenerateFaqsJob関連のメッセージ
+    'generate_faqs' => [
+        'completed' => 'FAQの自動生成が完了しました',
+        'failed'    => 'FAQの自動生成に失敗しました',
+        'skipped'   => 'チャンクが存在しないためFAQ生成をスキップしました',
+    ],
 ];
