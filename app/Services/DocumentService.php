@@ -50,18 +50,9 @@ class DocumentService
         ]);
 
         // チャンク分割→ベクトル化→保存を非同期Jobで実行する
-        // enqueue失敗時はDocumentとファイルをcleanupして取り残さない
-        try {
-            ProcessDocumentJob::dispatch($document);
-        } catch (\Throwable $e) {
-            $document->delete();
-            Storage::disk('local')->delete($path);
-            Log::error(config('errors.process_document.enqueue_failed'), [
-                'document_id' => $document->id,
-                'error'       => $e->getMessage(),
-            ]);
-            throw $e;
-        }
+        // sync実行時のJob失敗例外もここへ伝播するが、Document削除はしない
+        // （Job側でfailed/failedメソッドがステータスを管理するため）
+        ProcessDocumentJob::dispatch($document);
 
         return $document;
     }
