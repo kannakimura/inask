@@ -16,9 +16,18 @@ return [
         'read_failed'      => 'ファイルの読み込みに失敗しました',
     ],
 
+    // ProcessDocumentJob関連のメッセージ
+    'process_document' => [
+        'completed'      => 'ドキュメントの処理が完了しました',
+        'failed'         => 'ドキュメントの処理に失敗しました',
+        'enqueue_failed' => 'Jobのenqueueに失敗しました。ドキュメントを削除しました。',
+        'skipped'        => 'Jobはすでに処理済みまたは処理中のためスキップしました',
+    ],
+
     // EmbeddingService関連のエラーメッセージ
     'embedding' => [
-        'empty_chunks' => 'チャンクが空のため保存できません',
+        'empty_chunks'    => 'チャンクが空のため保存できません',
+        'too_many_chunks' => 'チャンク数がmax_chunksの上限を超えています',
     ],
 
     // Voyage AI embedding関連のエラーメッセージ

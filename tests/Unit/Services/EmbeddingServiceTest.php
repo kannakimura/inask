@@ -23,9 +23,11 @@ class EmbeddingServiceTest extends TestCase
 
         // VoyageClientをモックしてAPIを叩かずにダミーベクトルを返す
         $voyageClient = $this->createMock(VoyageClient::class);
-        $voyageClient->expects($this->exactly(count($chunks)))
-            ->method('embed')
-            ->willReturn($dummyVector);
+        // embedBatch()は全チャンクを1リクエストで処理するため1回だけ呼ばれる
+        $voyageClient->expects($this->once())
+            ->method('embedBatch')
+            ->with($chunks)
+            ->willReturn([$dummyVector, $dummyVector]);
 
         $service = new EmbeddingService($voyageClient);
         $service->embedAndSave($document, $chunks);
@@ -44,6 +46,25 @@ class EmbeddingServiceTest extends TestCase
         ]);
     }
 
+    // max_chunksを超えるチャンク数の場合は既存データを削除せず例外を投げる
+    public function test_embed_and_save_throws_when_chunks_exceed_max(): void
+    {
+        $document = Document::factory()->create();
+
+        // max_chunksを1に設定してチャンク数超過を再現する
+        config(['inask.embedding.max_chunks' => 1]);
+
+        $voyageClient = $this->createMock(VoyageClient::class);
+        $voyageClient->expects($this->never())->method('embedBatch');
+
+        $service = new EmbeddingService($voyageClient);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage(config('errors.embedding.too_many_chunks'));
+
+        $service->embedAndSave($document, ['チャンク1', 'チャンク2']);
+    }
+
     // 空チャンク配列を渡した場合は既存データを削除せず例外を投げる
     public function test_embed_and_save_throws_on_empty_chunks(): void
     {
@@ -57,7 +78,7 @@ class EmbeddingServiceTest extends TestCase
         ]);
 
         $voyageClient = $this->createMock(VoyageClient::class);
-        $voyageClient->expects($this->never())->method('embed');
+        $voyageClient->expects($this->never())->method('embedBatch');
 
         $service = new EmbeddingService($voyageClient);
 
@@ -77,7 +98,7 @@ class EmbeddingServiceTest extends TestCase
 
         $voyageClient = $this->createMock(VoyageClient::class);
         // embedding取得はトランザクション外で行うため、API失敗時はDBに何も保存されない
-        $voyageClient->method('embed')
+        $voyageClient->method('embedBatch')
             ->willThrowException(new \RuntimeException('API error'));
 
         $service = new EmbeddingService($voyageClient);
@@ -93,16 +114,16 @@ class EmbeddingServiceTest extends TestCase
         $this->assertDatabaseCount('chunks', 0);
     }
 
-    // embedが不正なレスポンス（非数値要素）を返した場合はトランザクションがロールバックされる
+    // embedBatchが不正なレスポンス（非数値要素）を返した場合はトランザクションがロールバックされる
     public function test_embed_and_save_rolls_back_on_invalid_embedding(): void
     {
         $document = Document::factory()->create();
 
         $voyageClient = $this->createMock(VoyageClient::class);
         // 数値以外の要素を含む壊れたembeddingを返す
-        $brokenVector = array_fill(0, 1023, 0.1);
+        $brokenVector   = array_fill(0, 1023, 0.1);
         $brokenVector[] = 'invalid';
-        $voyageClient->method('embed')->willReturn($brokenVector);
+        $voyageClient->method('embedBatch')->willReturn([$brokenVector]);
 
         $service = new EmbeddingService($voyageClient);
 
@@ -124,7 +145,7 @@ class EmbeddingServiceTest extends TestCase
         $dummyVector = array_fill(0, 1024, 0.1);
 
         $voyageClient = $this->createMock(VoyageClient::class);
-        $voyageClient->method('embed')->willReturn($dummyVector);
+        $voyageClient->method('embedBatch')->willReturn([$dummyVector]);
 
         Log::spy();
 

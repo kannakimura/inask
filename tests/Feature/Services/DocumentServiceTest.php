@@ -7,6 +7,7 @@ use App\Services\DocumentService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -25,6 +26,7 @@ class DocumentServiceTest extends TestCase
     // store()でファイルがストレージに保存されDBに登録される
     public function test_store_saves_file_and_creates_document(): void
     {
+        Queue::fake(); // ProcessDocumentJobをインライン実行させない
         Storage::fake('local');
         $file = UploadedFile::fake()->create('test.pdf', 100, 'application/pdf');
 
@@ -59,9 +61,34 @@ class DocumentServiceTest extends TestCase
         $this->assertTrue(true); // placeholder - 下記destroy()テストで代替
     }
 
+    // enqueue失敗（queue backend障害など）時はDocumentとファイルをcleanupする
+    public function test_store_cleans_up_when_enqueue_fails(): void
+    {
+        Storage::fake('local');
+
+        // dispatch()が例外を投げるようにQueueを設定する
+        Queue::fake();
+        Queue::shouldReceive('connection')->andThrow(new \RuntimeException('Redis connection failed'));
+
+        $file = UploadedFile::fake()->create('test.pdf', 100, 'application/pdf');
+
+        try {
+            $this->service->store($file);
+            $this->fail('例外が発生しませんでした');
+        } catch (\RuntimeException $e) {
+            // enqueue失敗の例外が伝播することを確認する
+        }
+
+        // DocumentがDBから削除されていることを確認する
+        $this->assertDatabaseCount('documents', 0);
+        // ファイルもストレージから削除されていることを確認する
+        Storage::disk('local')->assertDirectoryEmpty('documents');
+    }
+
     // destroy()でDBからドキュメントが削除されファイルも削除される
     public function test_destroy_deletes_document_and_file(): void
     {
+        Queue::fake(); // ProcessDocumentJobをインライン実行させない
         Storage::fake('local');
         $file     = UploadedFile::fake()->create('test.pdf', 100, 'application/pdf');
         $document = $this->service->store($file);
@@ -79,6 +106,7 @@ class DocumentServiceTest extends TestCase
     // destroy()でファイル削除に失敗した場合、専用チャンネルにログが出る
     public function test_destroy_logs_warning_when_file_deletion_fails(): void
     {
+        Queue::fake(); // ProcessDocumentJobをインライン実行させない
         Storage::fake('local');
         $file     = UploadedFile::fake()->create('test.pdf', 100, 'application/pdf');
         $document = $this->service->store($file);

@@ -6,6 +6,7 @@ use App\Models\Document;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -74,6 +75,7 @@ class DashboardTest extends TestCase
     // adminはファイルをアップロードできる
     public function test_admin_can_upload_file(): void
     {
+        Queue::fake(); // ProcessDocumentJobをインライン実行させない
         Storage::fake('local');
         $admin = User::factory()->create(['is_admin' => true]);
         $file  = UploadedFile::fake()->create('manual.pdf', 100, 'application/pdf');
@@ -87,6 +89,7 @@ class DashboardTest extends TestCase
     // 非adminはファイルをアップロードできない
     public function test_non_admin_cannot_upload_file(): void
     {
+        Queue::fake(); // 403前にJobが実行されないよう念のためfakeする
         Storage::fake('local');
         $user = User::factory()->create(['is_admin' => false]);
         $file = UploadedFile::fake()->create('manual.pdf', 100, 'application/pdf');
