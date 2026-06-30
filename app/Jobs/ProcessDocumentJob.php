@@ -60,4 +60,16 @@ class ProcessDocumentJob implements ShouldQueue
             throw $e;
         }
     }
+
+    // workerのタイムアウト・kill等のqueueレベル失敗時もステータスをfailedにする
+    // （handle()のtry/catchが動かない経路でprocessingのまま残るのを防ぐ）
+    public function failed(\Throwable $e): void
+    {
+        $this->document->update(['status' => config('inask.document_status.failed')]);
+
+        Log::error(config('errors.process_document.failed'), [
+            'document_id' => $this->document->id,
+            'error'       => $e->getMessage(),
+        ]);
+    }
 }
