@@ -27,6 +27,11 @@
                 </header>
             @endisset
 
+            <!-- フラッシュメッセージ（全ページ共通） -->
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 space-y-2">
+                <x-flash-message />
+            </div>
+
             <!-- Page Content -->
             <main>
                 {{ $slot }}
