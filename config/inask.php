@@ -9,8 +9,9 @@ return [
     ],
 
     // アップロード可能な最大ファイルサイズ（KB単位）
-    // 1MBに制限する（大きすぎるとJob内でVoyage APIを大量呼び出ししてタイムアウトするため）
-    'max_upload_size_kb' => env('MAX_UPLOAD_SIZE_KB', 1024),
+    // max_chunksと整合させる: max_chunks(500) × (chunk.size-overlap)(450文字) ≈ 225,000文字 ≈ 220KB
+    // この値を超えると ProcessDocumentJob が too_many_chunks で必ず failed になるため
+    'max_upload_size_kb' => env('MAX_UPLOAD_SIZE_KB', 220),
 
     'supported_mime_types' => [
         'application/pdf',
