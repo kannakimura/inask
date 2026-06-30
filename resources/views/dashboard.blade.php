@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex items-center justify-between">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                Dashboard
+                {{ config('messages.dashboard.page_title') }}
             </h2>
             {{-- pending/processing中はポーリング中インジケーターを表示する --}}
             @if ($hasPending)
@@ -14,7 +14,7 @@
                         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
                         <span class="relative inline-flex rounded-full h-2 w-2 bg-yellow-500"></span>
                     </span>
-                    処理中のドキュメントがあります。自動更新中…
+                    {{ config('messages.dashboard.processing_notice') }}
                 </span>
             @endif
         </div>
@@ -27,7 +27,7 @@
             @if (auth()->user()?->is_admin)
             <div id="upload-form" class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">ドキュメントをアップロード</h3>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ config('messages.dashboard.upload_section_title') }}</h3>
 
                     <form method="POST" action="{{ route('documents.store') }}" enctype="multipart/form-data">
                         @csrf
@@ -35,7 +35,7 @@
                         {{-- ファイル選択 --}}
                         <div class="mb-4">
                             <label for="file" class="block text-sm font-medium text-gray-700 mb-1">
-                                ファイルを選択
+                                {{ config('messages.dashboard.file_label') }}
                                 @php
                                     $maxKb = config('inask.max_upload_size_kb', 220);
                                     $maxLabel = $maxKb >= 1024
@@ -63,7 +63,7 @@
                                 type="submit"
                                 class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-500 active:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
                             >
-                                アップロード
+                                {{ config('messages.dashboard.upload_button') }}
                             </button>
                         </div>
                     </form>
@@ -74,7 +74,7 @@
             {{-- ドキュメント一覧 --}}
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">ドキュメント一覧</h3>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ config('messages.dashboard.list_section_title') }}</h3>
 
                     @if ($documents->isEmpty())
                         {{-- ドキュメント0件の空状態 --}}
@@ -89,7 +89,7 @@
                                     <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
                                     </svg>
-                                    アップロードする
+                                    {{ config('messages.dashboard.upload_cta_button') }}
                                 </a>
                             @endif
                         </div>
@@ -126,7 +126,7 @@
                                             <form method="POST" action="{{ route('documents.destroy', $document) }}" onsubmit="return confirm('削除しますか？')" class="ml-4 shrink-0">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="text-xs text-red-600 hover:text-red-800 font-medium">削除</button>
+                                                <button type="submit" class="text-xs text-red-600 hover:text-red-800 font-medium">{{ config('messages.dashboard.delete_button') }}</button>
                                             </form>
                                         @endif
                                     </div>

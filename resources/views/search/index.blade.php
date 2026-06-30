@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            社内ドキュメント検索
+            {{ config('messages.search.page_title') }}
         </h2>
     </x-slot>
 
@@ -14,7 +14,7 @@
                     <form method="POST" action="{{ route('search.query') }}">
                         @csrf
                         <label for="query" class="block text-sm font-medium text-gray-700 mb-2">
-                            質問を入力してください
+                            {{ config('messages.search.query_label') }}
                         </label>
                         <div class="flex gap-3">
                             <input
@@ -22,7 +22,7 @@
                                 id="query"
                                 name="query"
                                 value="{{ old('query', $query ?? '') }}"
-                                placeholder="例：有給休暇の申請方法は？"
+                                placeholder="{{ config('messages.search.query_placeholder') }}"
                                 maxlength="200"
                                 class="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                                 autofocus
@@ -34,7 +34,7 @@
                                 <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
                                 </svg>
-                                検索
+                                {{ config('messages.search.search_button') }}
                             </button>
                         </div>
                         {{-- バリデーションエラー --}}
@@ -52,11 +52,11 @@
                         <svg class="w-12 h-12 text-indigo-200 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
                         </svg>
-                        <p class="text-gray-600 text-sm font-medium">社内ドキュメントに質問してみましょう</p>
-                        <p class="text-gray-400 text-xs mt-1 mb-5">登録されているドキュメントをもとに、AIが回答を生成します</p>
+                        <p class="text-gray-600 text-sm font-medium">{{ config('messages.search.guidance_title') }}</p>
+                        <p class="text-gray-400 text-xs mt-1 mb-5">{{ config('messages.search.guidance_description') }}</p>
                         {{-- 検索例 --}}
                         <div class="flex flex-wrap justify-center gap-2">
-                            @foreach (['有給休暇の申請方法は？', '経費精算の締め日はいつ？', '入社初日の持ち物は？'] as $example)
+                            @foreach (config('messages.search.example_queries', []) as $example)
                                 <button
                                     type="button"
                                     onclick="document.getElementById('query').value = '{{ $example }}'; document.getElementById('query').focus();"
@@ -89,7 +89,7 @@
                             <svg class="w-5 h-5 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
                             </svg>
-                            <h3 class="text-base font-semibold text-gray-900">回答</h3>
+                            <h3 class="text-base font-semibold text-gray-900">{{ config('messages.search.answer_section_title') }}</h3>
                         </div>
                         {{-- whitespace-pre-wrapでClaude回答の改行・箇条書きをそのまま表示する --}}
                         <div class="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{{ $result->answer }}</div>
@@ -104,7 +104,8 @@
                                 <svg class="w-4 h-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                                 </svg>
-                                <h3 class="text-sm font-semibold text-gray-600">参照ドキュメント（{{ count($result->sources) }}件）</h3>
+                                {{-- sprintf で件数を埋め込む --}}
+                                <h3 class="text-sm font-semibold text-gray-600">{{ sprintf(config('messages.search.sources_section_title'), count($result->sources)) }}</h3>
                             </div>
                             <div class="space-y-2">
                                 @foreach ($result->sources as $i => $source)
