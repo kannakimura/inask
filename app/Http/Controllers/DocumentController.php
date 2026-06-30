@@ -13,17 +13,18 @@ class DocumentController extends Controller
     {
     }
 
-    // ドキュメント一覧を表示する
+    // ダッシュボード兼ドキュメント一覧を表示する
     public function index()
     {
-        // TODO(Phase 2-7): ドキュメント一覧の取得・表示を実装する
-        abort(403);
+        // 全ドキュメントを新しい順に取得してダッシュボードに渡す
+        $documents = Document::latest()->get();
+
+        return view('dashboard', compact('documents'));
     }
 
-    // アップロードフォームを表示する
+    // アップロードフォームを表示する（ダッシュボード埋め込みのため未使用）
     public function create()
     {
-        // TODO(Phase 2-5): アップロードフォームのViewを返す
         abort(403);
     }
 
@@ -33,9 +34,8 @@ class DocumentController extends Controller
         // バリデーション済みファイルをServiceに渡して保存する
         $document = $this->documentService->store($request->file('file'));
 
-        // index()未実装のためdashboardへリダイレクトする（Phase 2-7で変更予定）
         return redirect()
-            ->route('dashboard')
+            ->route('documents.index')
             ->with('success', 'ドキュメントをアップロードしました。');
     }
 
@@ -55,9 +55,8 @@ class DocumentController extends Controller
         // Serviceに削除処理を委譲する
         $this->documentService->destroy($document);
 
-        // index()未実装のためdashboardへリダイレクトする（Phase 2-7で変更予定）
         return redirect()
-            ->route('dashboard')
+            ->route('documents.index')
             ->with('success', 'ドキュメントを削除しました。');
     }
 }
