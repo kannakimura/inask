@@ -15,4 +15,11 @@ return [
         'unsupported_mime' => '未対応のMIMEタイプです',
         'read_failed'      => 'ファイルの読み込みに失敗しました',
     ],
+
+    // Voyage AI embedding関連のエラーメッセージ
+    'voyage' => [
+        'api_key_missing'  => 'VOYAGE_API_KEYが設定されていません',
+        'request_failed'   => 'Voyage AIへのリクエストに失敗しました',
+        'invalid_response' => 'Voyage AIから不正なレスポンスが返されました',
+    ],
 ];

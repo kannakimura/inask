@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    // Voyage AI embedding API
+    'voyage' => [
+        'api_key' => env('VOYAGE_API_KEY'),
+    ],
+
 ];
