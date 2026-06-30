@@ -45,7 +45,7 @@ class ProcessDocumentJob implements ShouldQueue
             // すべて完了したらステータスをdoneに更新する
             $this->document->update(['status' => config('inask.document_status.done')]);
 
-            Log::info('ドキュメントの処理が完了しました', [
+            Log::info(config('errors.process_document.completed'), [
                 'document_id' => $this->document->id,
                 'chunk_count' => count($chunks),
             ]);
@@ -54,7 +54,7 @@ class ProcessDocumentJob implements ShouldQueue
             // （再スローすることでLaravelのリトライ・failed_jobsの仕組みが動く）
             $this->document->update(['status' => config('inask.document_status.failed')]);
 
-            Log::error('ドキュメントの処理に失敗しました', [
+            Log::error(config('errors.process_document.failed'), [
                 'document_id' => $this->document->id,
                 'error'       => $e->getMessage(),
             ]);
