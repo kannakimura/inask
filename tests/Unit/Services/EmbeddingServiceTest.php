@@ -44,29 +44,50 @@ class EmbeddingServiceTest extends TestCase
         ]);
     }
 
-    // VoyageClientが例外を投げた場合はトランザクションがロールバックされる
-    public function test_embed_and_save_rolls_back_on_voyage_error(): void
+    // VoyageClientが例外を投げた場合はDBに保存されない
+    public function test_embed_and_save_aborts_on_voyage_error(): void
     {
         $document = Document::factory()->create();
 
         $voyageClient = $this->createMock(VoyageClient::class);
-        // 1件目は成功・2件目で失敗させてロールバックが機能するか確認する
+        // embedding取得はトランザクション外で行うため、API失敗時はDBに何も保存されない
         $voyageClient->method('embed')
-            ->willReturnOnConsecutiveCalls(
-                array_fill(0, 1024, 0.1),
-                $this->throwException(new \RuntimeException('API error')),
-            );
+            ->willThrowException(new \RuntimeException('API error'));
 
         $service = new EmbeddingService($voyageClient);
 
         try {
-            $service->embedAndSave($document, ['チャンク1', 'チャンク2']);
+            $service->embedAndSave($document, ['チャンク1']);
             $this->fail('例外が発生しませんでした');
         } catch (\RuntimeException $e) {
             $this->assertSame('API error', $e->getMessage());
         }
 
-        // ロールバックされて1件目のChunkも保存されていないことを確認する
+        // APIエラーでトランザクションに入る前に失敗するためChunkは保存されない
+        $this->assertDatabaseCount('chunks', 0);
+    }
+
+    // embedが不正なレスポンス（非数値要素）を返した場合はトランザクションがロールバックされる
+    public function test_embed_and_save_rolls_back_on_invalid_embedding(): void
+    {
+        $document = Document::factory()->create();
+
+        $voyageClient = $this->createMock(VoyageClient::class);
+        // 数値以外の要素を含む壊れたembeddingを返す
+        $brokenVector = array_fill(0, 1023, 0.1);
+        $brokenVector[] = 'invalid';
+        $voyageClient->method('embed')->willReturn($brokenVector);
+
+        $service = new EmbeddingService($voyageClient);
+
+        try {
+            $service->embedAndSave($document, ['チャンク1']);
+            $this->fail('例外が発生しませんでした');
+        } catch (\RuntimeException $e) {
+            $this->assertSame(config('errors.voyage.invalid_response'), $e->getMessage());
+        }
+
+        // バリデーションエラーでロールバックされてChunkは保存されない
         $this->assertDatabaseCount('chunks', 0);
     }
 
