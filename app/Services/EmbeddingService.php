@@ -18,16 +18,31 @@ class EmbeddingService
     // 既存のChunkは削除してから新規保存する（再処理対応）
     public function embedAndSave(Document $document, array $chunks): void
     {
-        DB::transaction(function () use ($document, $chunks) {
+        // トランザクション外で全チャンクのembeddingを取得する
+        // （外部APIをトランザクション内で待つとDB接続を長時間占有するため）
+        $embeddings = [];
+        foreach ($chunks as $index => $content) {
+            $embeddings[$index] = $this->voyageClient->embed($content);
+        }
+
+        // 全embedding取得後に短いトランザクションでdelete/insertする
+        DB::transaction(function () use ($document, $chunks, $embeddings) {
             // 既存チャンクを削除してから保存する（再処理時の重複防止）
             $document->chunks()->delete();
 
             foreach ($chunks as $index => $content) {
-                // Voyage AIでテキストをベクトル化する
-                $embedding = $this->voyageClient->embed($content);
+                $embedding = $embeddings[$index];
+
+                // 各要素がfloatであることを検証する（外部APIの壊れたレスポンス対策）
+                $validated = array_map(function ($v) {
+                    if (!is_int($v) && !is_float($v)) {
+                        throw new \RuntimeException(config('errors.voyage.invalid_response'));
+                    }
+                    return (float) $v;
+                }, $embedding);
 
                 // pgvectorが受け付けるフォーマット "[0.1,0.2,...]" に変換する
-                $embeddingLiteral = '[' . implode(',', $embedding) . ']';
+                $embeddingLiteral = '[' . implode(',', $validated) . ']';
 
                 // Chunkレコードを保存する（embeddingはDB::rawでvector型として挿入）
                 Chunk::create([
