@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Clients\VoyageClient;
 use App\Models\Document;
-use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -70,9 +69,6 @@ class DemoSeeder extends Seeder
 
     public function run(): void
     {
-        // デモユーザーを取得する（DatabaseSeederで作成済みであること）
-        $user = User::where('email', 'demo@innask.local')->firstOrFail();
-
         $voyageClient = app(VoyageClient::class);
 
         foreach ($this->documents as $docData) {
