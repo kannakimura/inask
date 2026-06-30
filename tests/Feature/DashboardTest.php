@@ -66,11 +66,53 @@ class DashboardTest extends TestCase
         $admin = User::factory()->create(['is_admin' => true]);
 
         $response = $this->actingAs($admin)
-            ->withSession(['success' => 'ドキュメントをアップロードしました。'])
+            ->withSession(['success' => config('errors.document.upload_success')])
             ->get(route('dashboard'));
 
         $response->assertStatus(200);
-        $response->assertSee('ドキュメントをアップロードしました。');
+        $response->assertSee(config('errors.document.upload_success'));
+    }
+
+    // エラーフラッシュメッセージが表示される
+    public function test_error_flash_message_is_displayed(): void
+    {
+        $this->withoutVite();
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)
+            ->withSession(['error' => config('errors.document.delete_failed')])
+            ->get(route('dashboard'));
+
+        $response->assertStatus(200);
+        $response->assertSee(config('errors.document.delete_failed'));
+    }
+
+    // warningフラッシュメッセージが表示される
+    public function test_warning_flash_message_is_displayed(): void
+    {
+        $this->withoutVite();
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)
+            ->withSession(['warning' => '処理に時間がかかっています。'])
+            ->get(route('dashboard'));
+
+        $response->assertStatus(200);
+        $response->assertSee('処理に時間がかかっています。');
+    }
+
+    // フラッシュメッセージは検索ページでも表示される（グローバルレイアウト組み込みの確認）
+    public function test_flash_message_is_displayed_on_search_page(): void
+    {
+        $this->withoutVite();
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)
+            ->withSession(['success' => config('errors.document.delete_success')])
+            ->get(route('search.index'));
+
+        $response->assertStatus(200);
+        $response->assertSee(config('errors.document.delete_success'));
     }
 
     // adminはファイルをアップロードできる

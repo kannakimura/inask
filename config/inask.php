@@ -54,6 +54,10 @@ return [
         'top_k' => 5,
     ],
 
+    // フラッシュメッセージのセッションキー一覧
+    // flash-messageコンポーネントはこのキーを順に参照して表示する
+    'flash_types' => ['success', 'error', 'warning'],
+
     // Claude API（FAQ生成）の設定
     'claude' => [
         // FAQ生成に使用するモデル

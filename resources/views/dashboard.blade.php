@@ -23,20 +23,6 @@
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
 
-            {{-- フラッシュメッセージ（成功） --}}
-            @if (session('success'))
-                <div class="bg-green-50 border border-green-300 text-green-800 rounded-lg p-4">
-                    {{ session('success') }}
-                </div>
-            @endif
-
-            {{-- フラッシュメッセージ（エラー） --}}
-            @if (session('error'))
-                <div class="bg-red-50 border border-red-300 text-red-800 rounded-lg p-4">
-                    {{ session('error') }}
-                </div>
-            @endif
-
             {{-- ドキュメントアップロードフォーム（adminのみ表示） --}}
             @if (auth()->user()?->is_admin)
             <div id="upload-form" class="bg-white overflow-hidden shadow-sm sm:rounded-lg">

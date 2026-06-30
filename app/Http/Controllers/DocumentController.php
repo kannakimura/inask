@@ -47,7 +47,7 @@ class DocumentController extends Controller
 
         return redirect()
             ->route('documents.index')
-            ->with('success', 'ドキュメントをアップロードしました。');
+            ->with('success', config('errors.document.upload_success'));
     }
 
     // ドキュメント詳細（FAQ一覧）を表示する
@@ -68,6 +68,6 @@ class DocumentController extends Controller
 
         return redirect()
             ->route('documents.index')
-            ->with('success', 'ドキュメントを削除しました。');
+            ->with('success', config('errors.document.delete_success'));
     }
 }
