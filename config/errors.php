@@ -51,6 +51,11 @@ return [
         'invalid_format'   => 'Claude APIのレスポンスに必要なquestion/answerフィールドがありません',
     ],
 
+    // AnswerGeneratorService関連のエラーメッセージ
+    'answer_generator' => [
+        'no_sources' => '関連するドキュメントが見つかりませんでした。別のキーワードで検索してください。',
+    ],
+
     // GenerateFaqsJob関連のメッセージ
     'generate_faqs' => [
         'completed' => 'FAQの自動生成が完了しました',
