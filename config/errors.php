@@ -9,4 +9,10 @@ return [
         'store_failed'    => 'ファイルの保存に失敗しました。',
         'deletion_failed' => 'ファイル削除に失敗しました（孤立ファイル）',
     ],
+
+    // テキスト抽出関連のエラーメッセージ
+    'extract' => [
+        'unsupported_mime' => '未対応のMIMEタイプです',
+        'read_failed'      => 'ファイルの読み込みに失敗しました',
+    ],
 ];
