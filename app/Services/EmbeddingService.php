@@ -23,10 +23,15 @@ class EmbeddingService
             throw new \InvalidArgumentException(config('errors.embedding.empty_chunks'));
         }
 
-        // トランザクション外で全チャンクのembeddingを一括取得する
+        // トランザクション外で全チャンクのembeddingを取得する
         // （外部APIをトランザクション内で待つとDB接続を長時間占有するため）
-        // embedBatch()で1リクエストにまとめることで直列呼び出しのタイムアウトを防ぐ
-        $embeddings = $this->voyageClient->embedBatch(array_values($chunks));
+        // Voyage APIのinput上限（1000件）を超えないようbatch_size単位に分割して送る
+        $batchSize  = config('inask.embedding.batch_size', 128);
+        $embeddings = [];
+        foreach (array_chunk(array_values($chunks), $batchSize) as $batch) {
+            $batchEmbeddings = $this->voyageClient->embedBatch($batch);
+            $embeddings      = array_merge($embeddings, $batchEmbeddings);
+        }
 
         // 全embedding取得後に短いトランザクションでdelete/insertする
         DB::transaction(function () use ($document, $chunks, $embeddings) {
