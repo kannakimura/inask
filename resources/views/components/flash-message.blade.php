@@ -4,12 +4,11 @@
     各タイプにアイコンと配色を割り当て、視覚的に区別しやすくする
 --}}
 @php
-    // 表示すべきフラッシュメッセージとそのタイプを判定する
-    $flashes = [
-        'success' => session('success'),
-        'error'   => session('error'),
-        'warning' => session('warning'),
-    ];
+    // 表示すべきフラッシュメッセージをconfigのキー一覧から収集する
+    $flashes = collect(config('inask.flash_types', []))
+        ->mapWithKeys(fn(string $type) => [$type => session($type)])
+        ->filter()
+        ->all();
 
     // タイプごとの配色・アイコン設定
     $styles = [
