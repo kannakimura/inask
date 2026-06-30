@@ -37,4 +37,12 @@ return [
     'search' => [
         'top_k' => 5,
     ],
+
+    // Claude API（FAQ生成）の設定
+    'claude' => [
+        // FAQ生成に使用するモデル
+        'model'      => 'claude-sonnet-4-6',
+        // 1リクエストあたりの最大出力トークン数
+        'max_tokens' => 1024,
+    ],
 ];
