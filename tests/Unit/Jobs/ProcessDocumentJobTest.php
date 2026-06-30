@@ -8,8 +8,7 @@ use App\Services\ChunkSplitterService;
 use App\Services\EmbeddingService;
 use App\Services\TextExtractorService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
 class ProcessDocumentJobTest extends TestCase
@@ -19,17 +18,13 @@ class ProcessDocumentJobTest extends TestCase
     // handle()が正常に完了するとステータスがdoneになる
     public function test_handle_updates_status_to_done_on_success(): void
     {
-        Storage::fake('local');
-
         $document = Document::factory()->create([
             'status'    => config('inask.document_status.pending'),
             'mime_type' => 'text/plain',
             'file_path' => 'documents/test.txt',
         ]);
 
-        // ファイルをfakeストレージに配置する
-        Storage::disk('local')->put('documents/test.txt', 'テストコンテンツ');
-
+        // TextExtractorServiceをモックしてStorage依存を排除する
         $textExtractor = $this->createMock(TextExtractorService::class);
         $textExtractor->method('extract')->willReturn('テストコンテンツ');
 
@@ -49,15 +44,11 @@ class ProcessDocumentJobTest extends TestCase
     // handle()はprocessing→doneの順でステータスを更新する
     public function test_handle_sets_processing_status_before_done(): void
     {
-        Storage::fake('local');
-
         $document = Document::factory()->create([
             'status'    => config('inask.document_status.pending'),
             'mime_type' => 'text/plain',
             'file_path' => 'documents/test.txt',
         ]);
-
-        Storage::disk('local')->put('documents/test.txt', 'テストコンテンツ');
 
         $statusDuringProcessing = null;
 
@@ -85,15 +76,11 @@ class ProcessDocumentJobTest extends TestCase
     // 処理中に例外が発生した場合はステータスがfailedになり例外が再スローされる
     public function test_handle_updates_status_to_failed_on_error(): void
     {
-        Storage::fake('local');
-
         $document = Document::factory()->create([
             'status'    => config('inask.document_status.pending'),
             'mime_type' => 'text/plain',
             'file_path' => 'documents/test.txt',
         ]);
-
-        Storage::disk('local')->put('documents/test.txt', 'テストコンテンツ');
 
         $textExtractor = $this->createMock(TextExtractorService::class);
         $textExtractor->method('extract')->willThrowException(new \RuntimeException('抽出エラー'));
@@ -117,16 +104,16 @@ class ProcessDocumentJobTest extends TestCase
     // store()後にProcessDocumentJobがdispatchされる
     public function test_store_dispatches_process_document_job(): void
     {
-        \Illuminate\Support\Facades\Queue::fake();
+        Queue::fake();
 
         $file = \Illuminate\Http\UploadedFile::fake()->create('test.txt', 10, 'text/plain');
 
         $service  = app(\App\Services\DocumentService::class);
         $document = $service->store($file);
 
-        \Illuminate\Support\Facades\Queue::assertPushed(ProcessDocumentJob::class, function ($job) use ($document) {
+        Queue::assertPushed(ProcessDocumentJob::class, function ($job) use ($document) {
             // リフレクションでprivateプロパティを確認する
-            $ref = new \ReflectionClass($job);
+            $ref  = new \ReflectionClass($job);
             $prop = $ref->getProperty('document');
             $prop->setAccessible(true);
             return $prop->getValue($job)->id === $document->id;
