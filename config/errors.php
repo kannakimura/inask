@@ -36,4 +36,11 @@ return [
         'request_failed'   => 'Voyage AIへのリクエストに失敗しました',
         'invalid_response' => 'Voyage AIから不正なレスポンスが返されました',
     ],
+
+    // Anthropic Claude API関連のエラーメッセージ
+    'claude' => [
+        'api_key_missing'  => 'ANTHROPIC_API_KEYが設定されていません',
+        'request_failed'   => 'Claude APIへのリクエストに失敗しました',
+        'invalid_response' => 'Claude APIから不正なレスポンスが返されました',
+    ],
 ];
