@@ -18,9 +18,8 @@ return [
 
     // ProcessDocumentJob関連のメッセージ
     'process_document' => [
-        'completed'       => 'ドキュメントの処理が完了しました',
-        'failed'          => 'ドキュメントの処理に失敗しました',
-        'enqueue_failed'  => 'Jobのenqueueに失敗しました。ドキュメントを削除しました。',
+        'completed' => 'ドキュメントの処理が完了しました',
+        'failed'    => 'ドキュメントの処理に失敗しました',
     ],
 
     // EmbeddingService関連のエラーメッセージ
