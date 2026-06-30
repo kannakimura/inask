@@ -18,8 +18,8 @@ class DocumentController extends Controller
     {
         $this->authorize('viewAny', Document::class);
 
-        // 新しい順にページネーションして取得する
-        $documents = Document::latest()->paginate(20);
+        // faqs をeager loadしてN+1を防ぐ
+        $documents = Document::with('faqs')->latest()->paginate(20);
 
         // pending/processingが1件でもある場合はフロントでポーリングを有効にする
         $hasPending = Document::whereIn('status', [
