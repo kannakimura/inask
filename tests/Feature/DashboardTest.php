@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Document;
+use App\Models\Faq;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -192,5 +193,65 @@ class DashboardTest extends TestCase
         $response->assertStatus(200);
         $response->assertDontSee('data-auto-reload="true"', false);
         $response->assertDontSee('location.reload()', false);
+    }
+
+    // doneかつFAQがある場合はアコーディオン形式でFAQが表示される
+    public function test_faqs_are_shown_as_accordion_when_document_is_done(): void
+    {
+        $this->withoutVite();
+        $user     = User::factory()->create(['is_admin' => false]);
+        $document = Document::factory()->create(['status' => config('inask.document_status.done')]);
+        Faq::factory()->create([
+            'document_id' => $document->id,
+            'question'    => 'テスト質問ですか？',
+            'answer'      => 'テスト回答です。',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('dashboard'));
+
+        $response->assertStatus(200);
+        // アコーディオン構造（details/summary）とQ&A内容が出力されることを確認する
+        $response->assertSee('data-faq-section', false);
+        $response->assertSee('テスト質問ですか？');
+        $response->assertSee('テスト回答です。');
+    }
+
+    // doneだがFAQが0件の場合は未生成メッセージが表示される
+    public function test_faq_not_generated_message_shown_when_done_but_no_faqs(): void
+    {
+        $this->withoutVite();
+        $user     = User::factory()->create(['is_admin' => false]);
+        Document::factory()->create(['status' => config('inask.document_status.done')]);
+
+        $response = $this->actingAs($user)->get(route('dashboard'));
+
+        $response->assertStatus(200);
+        $response->assertSee('FAQはまだ生成されていません。');
+    }
+
+    // failedステータスのドキュメントはFAQ生成失敗メッセージが表示される
+    public function test_faq_failed_message_shown_when_document_failed(): void
+    {
+        $this->withoutVite();
+        $user     = User::factory()->create(['is_admin' => false]);
+        Document::factory()->create(['status' => config('inask.document_status.failed')]);
+
+        $response = $this->actingAs($user)->get(route('dashboard'));
+
+        $response->assertStatus(200);
+        $response->assertSee('処理に失敗したため、FAQを生成できませんでした。');
+    }
+
+    // pending/processingのドキュメントはFAQ待機メッセージが表示される
+    public function test_faq_pending_message_shown_when_document_is_processing(): void
+    {
+        $this->withoutVite();
+        $user     = User::factory()->create(['is_admin' => false]);
+        Document::factory()->create(['status' => config('inask.document_status.processing')]);
+
+        $response = $this->actingAs($user)->get(route('dashboard'));
+
+        $response->assertStatus(200);
+        $response->assertSee('ベクトル化処理が完了するとFAQが表示されます。');
     }
 }
