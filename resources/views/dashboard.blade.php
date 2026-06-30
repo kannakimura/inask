@@ -39,7 +39,7 @@
 
             {{-- ドキュメントアップロードフォーム（adminのみ表示） --}}
             @if (auth()->user()?->is_admin)
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+            <div id="upload-form" class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6">
                     <h3 class="text-lg font-semibold text-gray-900 mb-4">ドキュメントをアップロード</h3>
 
@@ -91,7 +91,22 @@
                     <h3 class="text-lg font-semibold text-gray-900 mb-4">ドキュメント一覧</h3>
 
                     @if ($documents->isEmpty())
-                        <p class="text-gray-500 text-sm">アップロードされたドキュメントはありません。</p>
+                        {{-- ドキュメント0件の空状態 --}}
+                        <div class="flex flex-col items-center justify-center py-12 text-center">
+                            <svg class="w-12 h-12 text-gray-300 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m6.75 12H9m1.5-12H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                            </svg>
+                            <p class="text-gray-500 text-sm font-medium">まだドキュメントがありません</p>
+                            <p class="text-gray-400 text-xs mt-1">PDFやテキストファイルを登録すると、自動でFAQが生成されます</p>
+                            @if (auth()->user()?->is_admin)
+                                <a href="#upload-form" class="mt-4 inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-500 transition ease-in-out duration-150">
+                                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+                                    </svg>
+                                    アップロードする
+                                </a>
+                            @endif
+                        </div>
                     @else
                         @php
                             // 削除ボタン表示判定をループ外で一度だけ行う
@@ -135,7 +150,12 @@
                                         @if ($document->status === config('inask.document_status.done'))
                                             @if ($document->faqs->isEmpty())
                                                 {{-- done済みだがFAQ未生成（生成ジョブが未完了または失敗） --}}
-                                                <p class="text-xs text-gray-400">FAQはまだ生成されていません。</p>
+                                                <div class="flex items-center gap-2 text-xs text-gray-400">
+                                                    <svg class="w-4 h-4 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                                                    </svg>
+                                                    FAQはまだ生成されていません
+                                                </div>
                                             @else
                                                 {{-- FAQアコーディオン（details/summaryでJSなし実装） --}}
                                                 <div class="space-y-1" data-faq-section>
@@ -156,10 +176,22 @@
                                                 </div>
                                             @endif
                                         @elseif ($document->status === config('inask.document_status.failed'))
-                                            <p class="text-xs text-red-400">処理に失敗したため、FAQを生成できませんでした。</p>
+                                            {{-- 処理失敗 --}}
+                                            <div class="flex items-center gap-2 text-xs text-red-400">
+                                                <svg class="w-4 h-4 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                                                </svg>
+                                                処理に失敗しました。再アップロードをお試しください
+                                            </div>
                                         @else
-                                            {{-- pending / processing --}}
-                                            <p class="text-xs text-gray-400">ベクトル化処理が完了するとFAQが表示されます。</p>
+                                            {{-- pending / processing：アニメーションドットで処理中を表現する --}}
+                                            <div class="flex items-center gap-2 text-xs text-yellow-600">
+                                                <span class="relative flex h-2 w-2 shrink-0">
+                                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
+                                                    <span class="relative inline-flex rounded-full h-2 w-2 bg-yellow-500"></span>
+                                                </span>
+                                                ベクトル化処理中です。しばらくお待ちください
+                                            </div>
                                         @endif
                                     </div>
 
