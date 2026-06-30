@@ -15,13 +15,14 @@ class VoyageClient
 
     public function __construct()
     {
-        // nullの場合も空文字に正規化してembed()内で一元チェックする
+        // nullの場合も空文字に正規化してembedBatch()内で一元チェックする
         $this->apiKey = config('services.voyage.api_key') ?? '';
         $this->model  = config('inask.embedding.model', 'voyage-3');
     }
 
-    // テキストを受け取りembeddingベクトル（float配列）を返す
-    public function embed(string $text): array
+    // テキスト配列を一括でembeddingし、入力順通りのベクトル配列を返す
+    // 1リクエストで全チャンクをAPIに送ることで直列呼び出しによるタイムアウトを防ぐ
+    public function embedBatch(array $texts): array
     {
         if ($this->apiKey === '') {
             throw new RuntimeException(config('errors.voyage.api_key_missing'));
@@ -45,23 +46,26 @@ class VoyageClient
                 })
                 ->post("{$this->baseUrl}/embeddings", [
                     'model' => $this->model,
-                    'input' => [$text],
+                    'input' => $texts,
                 ]);
 
             // HTTPエラーレスポンスをRequestExceptionとして投げる
             $response->throw();
 
-            // レスポンスのdata[0].embeddingからベクトル配列を取り出す
-            $embedding = $response->json('data.0.embedding');
+            // レスポンスのdataからembedding配列を取り出す
+            $data = $response->json('data');
 
-            if (!is_array($embedding)) {
+            if (!is_array($data) || count($data) !== count($texts)) {
                 throw new RuntimeException(config('errors.voyage.invalid_response'));
             }
 
-            return $embedding;
+            // data[].indexでソートして入力テキストの順序と一致させる
+            // （Voyage APIはindex順に返すとは保証していないため）
+            usort($data, fn($a, $b) => $a['index'] <=> $b['index']);
+
+            return array_column($data, 'embedding');
         } catch (RequestException | ConnectionException $e) {
             // HTTPエラーと接続失敗を同じRuntimeExceptionに変換して上位に伝える
-            // $e->getMessage()で元のエラー内容（ステータスコード・接続エラー詳細）を保持する
             throw new RuntimeException(
                 config('errors.voyage.request_failed') . ': ' . $e->getMessage(),
                 previous: $e,
