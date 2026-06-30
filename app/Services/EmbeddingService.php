@@ -27,6 +27,10 @@ class EmbeddingService
 
         // 全embedding取得後に短いトランザクションでdelete/insertする
         DB::transaction(function () use ($document, $chunks, $embeddings) {
+            // document行をロックして同一documentの並行再処理を直列化する
+            // （キューのretryや手動再実行で同時に走るとchunkが重複するため）
+            Document::lockForUpdate()->findOrFail($document->id);
+
             // 既存チャンクを削除してから保存する（再処理時の重複防止）
             $document->chunks()->delete();
 
