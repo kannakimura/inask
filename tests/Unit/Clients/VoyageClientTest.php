@@ -12,6 +12,8 @@ class VoyageClientTest extends TestCase
     // embed()が正常なレスポンスからベクトル配列を返す
     public function test_embed_returns_vector_array(): void
     {
+        config(['services.voyage.api_key' => 'test-key']);
+
         // 1024次元のダミーベクトルを返すモックを設定する
         $dummyVector = array_fill(0, 1024, 0.1);
 
