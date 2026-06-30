@@ -26,7 +26,8 @@ return [
 
     // EmbeddingService関連のエラーメッセージ
     'embedding' => [
-        'empty_chunks' => 'チャンクが空のため保存できません',
+        'empty_chunks'    => 'チャンクが空のため保存できません',
+        'too_many_chunks' => 'チャンク数がmax_chunksの上限を超えています',
     ],
 
     // Voyage AI embedding関連のエラーメッセージ
