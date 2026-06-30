@@ -16,6 +16,12 @@ return [
         'read_failed'      => 'ファイルの読み込みに失敗しました',
     ],
 
+    // ProcessDocumentJob関連のメッセージ
+    'process_document' => [
+        'completed' => 'ドキュメントの処理が完了しました',
+        'failed'    => 'ドキュメントの処理に失敗しました',
+    ],
+
     // EmbeddingService関連のエラーメッセージ
     'embedding' => [
         'empty_chunks' => 'チャンクが空のため保存できません',
