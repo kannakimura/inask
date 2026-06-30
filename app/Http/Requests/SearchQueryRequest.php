@@ -24,9 +24,9 @@ class SearchQueryRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'query.required' => '検索キーワードを入力してください。',
-            'query.string'   => '検索キーワードは文字列で入力してください。',
-            'query.max'      => '検索キーワードは200文字以内で入力してください。',
+            'query.required' => config('errors.search.query_required'),
+            'query.string'   => config('errors.search.query_string'),
+            'query.max'      => config('errors.search.query_max'),
         ];
     }
 }
