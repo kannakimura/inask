@@ -30,13 +30,14 @@ class VoyageClient
         try {
             $response = Http::withToken($this->apiKey)
                 ->timeout(30)
-                // 429・5xx・接続断のみリトライする（401など認証エラーはリトライしない）
+                // 429・5xx・接続断のみリトライする（4xx系クライアントエラーはリトライしない）
                 ->retry(3, 1000, function (\Exception $e) {
                     if ($e instanceof ConnectionException) {
                         return true;
                     }
                     if ($e instanceof RequestException) {
-                        return $e->response->status() !== 401;
+                        $status = $e->response->status();
+                        return $status === 429 || $status >= 500;
                     }
                     return false;
                 })
