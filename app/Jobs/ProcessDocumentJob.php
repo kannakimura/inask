@@ -18,8 +18,10 @@ class ProcessDocumentJob implements ShouldQueue
     // 失敗時は管理者がドキュメントを再アップロードして対処する
     public int $tries = 1;
 
-    // タイムアウト上限（秒）：大きなドキュメントでも最大1MBに制限しているため60秒で十分
-    public int $timeout = 60;
+    // タイムアウト上限（秒）
+    // max_chunks=500 → ceil(500/128)=4バッチ × HTTP最大30秒 × retry3回 = 最悪360秒
+    // バッファを含め600秒に設定してmax_chunksと整合させる
+    public int $timeout = 600;
 
     public function __construct(private Document $document)
     {
