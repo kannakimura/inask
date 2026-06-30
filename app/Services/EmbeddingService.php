@@ -23,6 +23,13 @@ class EmbeddingService
             throw new \InvalidArgumentException(config('errors.embedding.empty_chunks'));
         }
 
+        // Job timeoutと整合させるためにチャンク数上限を設ける
+        // 上限を超えると必要なバッチ数が増えてworker timeoutになるため早期に失敗させる
+        $maxChunks = config('inask.embedding.max_chunks', 500);
+        if (count($chunks) > $maxChunks) {
+            throw new \InvalidArgumentException(config('errors.embedding.too_many_chunks'));
+        }
+
         // トランザクション外で全チャンクのembeddingを取得する
         // （外部APIをトランザクション内で待つとDB接続を長時間占有するため）
         // Voyage APIのinput上限（1000件）を超えないようbatch_size単位に分割して送る
