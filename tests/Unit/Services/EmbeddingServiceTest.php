@@ -50,17 +50,23 @@ class EmbeddingServiceTest extends TestCase
         $document = Document::factory()->create();
 
         $voyageClient = $this->createMock(VoyageClient::class);
+        // 1件目は成功・2件目で失敗させてロールバックが機能するか確認する
         $voyageClient->method('embed')
-            ->willThrowException(new \RuntimeException('API error'));
+            ->willReturnOnConsecutiveCalls(
+                array_fill(0, 1024, 0.1),
+                $this->throwException(new \RuntimeException('API error')),
+            );
 
         $service = new EmbeddingService($voyageClient);
 
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('API error');
+        try {
+            $service->embedAndSave($document, ['チャンク1', 'チャンク2']);
+            $this->fail('例外が発生しませんでした');
+        } catch (\RuntimeException $e) {
+            $this->assertSame('API error', $e->getMessage());
+        }
 
-        $service->embedAndSave($document, ['テスト']);
-
-        // ロールバックされてChunkが保存されていないことを確認する
+        // ロールバックされて1件目のChunkも保存されていないことを確認する
         $this->assertDatabaseCount('chunks', 0);
     }
 
