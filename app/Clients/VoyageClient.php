@@ -30,13 +30,15 @@ class VoyageClient
         try {
             $response = Http::withToken($this->apiKey)
                 ->timeout(30)
-                // 429・5xx・接続断のみリトライする（4xx系クライアントエラーはリトライしない）
                 ->retry(3, 1000, function (\Exception $e) {
+                    // 接続断（タイムアウト・DNS障害など）は一時的な障害のためリトライする
                     if ($e instanceof ConnectionException) {
                         return true;
                     }
                     if ($e instanceof RequestException) {
                         $status = $e->response->status();
+                        // 429（レートリミット）と5xx（サーバーエラー）は回復の見込みがあるためリトライする
+                        // 400・401・403・422などの4xx系はリクエスト自体が不正なためリトライしない
                         return $status === 429 || $status >= 500;
                     }
                     return false;
@@ -46,9 +48,10 @@ class VoyageClient
                     'input' => [$text],
                 ]);
 
+            // HTTPエラーレスポンスをRequestExceptionとして投げる
             $response->throw();
 
-            // レスポンスからembeddingベクトルを取り出す
+            // レスポンスのdata[0].embeddingからベクトル配列を取り出す
             $embedding = $response->json('data.0.embedding');
 
             if (!is_array($embedding)) {
@@ -57,6 +60,8 @@ class VoyageClient
 
             return $embedding;
         } catch (RequestException | ConnectionException $e) {
+            // HTTPエラーと接続失敗を同じRuntimeExceptionに変換して上位に伝える
+            // $e->getMessage()で元のエラー内容（ステータスコード・接続エラー詳細）を保持する
             throw new RuntimeException(
                 config('errors.voyage.request_failed') . ': ' . $e->getMessage(),
                 previous: $e,
