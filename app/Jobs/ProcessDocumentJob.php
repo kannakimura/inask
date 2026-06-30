@@ -18,6 +18,9 @@ class ProcessDocumentJob implements ShouldQueue
     // 失敗時は管理者がドキュメントを再アップロードして対処する
     public int $tries = 1;
 
+    // タイムアウト上限（秒）：大きなドキュメントでも最大1MBに制限しているため60秒で十分
+    public int $timeout = 60;
+
     public function __construct(private Document $document)
     {
     }
@@ -28,8 +31,20 @@ class ProcessDocumentJob implements ShouldQueue
         ChunkSplitterService $chunkSplitter,
         EmbeddingService $embeddingService,
     ): void {
-        // ステータスをprocessingに更新してから処理を開始する
-        $this->document->update(['status' => config('inask.document_status.processing')]);
+        // pendingの場合のみprocessingに更新する（原子的なCAS更新）
+        // 更新件数が0の場合は既にprocessing/done/failedのため処理をスキップする
+        // （二重dispatch時の重複課金を防ぐ）
+        $updated = Document::where('id', $this->document->id)
+            ->where('status', config('inask.document_status.pending'))
+            ->update(['status' => config('inask.document_status.processing')]);
+
+        if ($updated === 0) {
+            Log::info(config('errors.process_document.skipped'), [
+                'document_id' => $this->document->id,
+                'status'      => $this->document->fresh()->status,
+            ]);
+            return;
+        }
 
         try {
             // Storage keyをそのまま渡す（TextExtractorService内部で絶対パスに変換するため）

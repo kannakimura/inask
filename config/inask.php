@@ -9,7 +9,8 @@ return [
     ],
 
     // アップロード可能な最大ファイルサイズ（KB単位）
-    'max_upload_size_kb' => env('MAX_UPLOAD_SIZE_KB', 10240),
+    // 1MBに制限する（大きすぎるとJob内でVoyage APIを大量呼び出ししてタイムアウトするため）
+    'max_upload_size_kb' => env('MAX_UPLOAD_SIZE_KB', 1024),
 
     'supported_mime_types' => [
         'application/pdf',

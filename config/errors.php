@@ -21,6 +21,7 @@ return [
         'completed'      => 'ドキュメントの処理が完了しました',
         'failed'         => 'ドキュメントの処理に失敗しました',
         'enqueue_failed' => 'Jobのenqueueに失敗しました。ドキュメントを削除しました。',
+        'skipped'        => 'Jobはすでに処理済みまたは処理中のためスキップしました',
     ],
 
     // EmbeddingService関連のエラーメッセージ
