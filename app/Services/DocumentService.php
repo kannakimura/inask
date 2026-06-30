@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Jobs\ProcessDocumentJob;
 use App\Models\Document;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -47,6 +48,9 @@ class DocumentService
             'title'       => $document->title,
             'mime_type'   => $document->mime_type,
         ]);
+
+        // チャンク分割→ベクトル化→保存を非同期Jobで実行する
+        ProcessDocumentJob::dispatch($document);
 
         return $document;
     }
