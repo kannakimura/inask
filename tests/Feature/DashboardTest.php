@@ -122,7 +122,7 @@ class DashboardTest extends TestCase
         $response = $this->actingAs($user)->get(route('dashboard'));
 
         $response->assertStatus(200);
-        $response->assertSee('まだドキュメントがありません');
+        $response->assertSee(config('errors.dashboard.no_documents'));
     }
 
     // adminユーザーには削除ボタンが表示される
@@ -226,7 +226,7 @@ class DashboardTest extends TestCase
         $response = $this->actingAs($user)->get(route('dashboard'));
 
         $response->assertStatus(200);
-        $response->assertSee('FAQはまだ生成されていません');
+        $response->assertSee(config('errors.dashboard.faq_not_generated'));
     }
 
     // failedステータスのドキュメントはFAQ生成失敗メッセージが表示される
@@ -239,7 +239,7 @@ class DashboardTest extends TestCase
         $response = $this->actingAs($user)->get(route('dashboard'));
 
         $response->assertStatus(200);
-        $response->assertSee('処理に失敗しました。再アップロードをお試しください');
+        $response->assertSee(config('errors.dashboard.faq_failed'));
     }
 
     // pending/processingのドキュメントはFAQ待機メッセージが表示される
@@ -252,7 +252,7 @@ class DashboardTest extends TestCase
         $response = $this->actingAs($user)->get(route('dashboard'));
 
         $response->assertStatus(200);
-        $response->assertSee('ベクトル化処理中です。しばらくお待ちください');
+        $response->assertSee(config('errors.dashboard.faq_processing'));
     }
 
     // ドキュメント0件の空状態でadminにはアップロードCTAボタンが表示される
@@ -264,7 +264,7 @@ class DashboardTest extends TestCase
         $response = $this->actingAs($admin)->get(route('dashboard'));
 
         $response->assertStatus(200);
-        $response->assertSee('まだドキュメントがありません');
+        $response->assertSee(config('errors.dashboard.no_documents'));
         // アップロードCTAボタンが表示されることを確認する
         $response->assertSee('アップロードする');
         $response->assertSee('#upload-form', false);
@@ -279,7 +279,7 @@ class DashboardTest extends TestCase
         $response = $this->actingAs($user)->get(route('dashboard'));
 
         $response->assertStatus(200);
-        $response->assertSee('まだドキュメントがありません');
+        $response->assertSee(config('errors.dashboard.no_documents'));
         // 非adminにはCTAが表示されないことを確認する
         $response->assertDontSee('アップロードする');
     }
