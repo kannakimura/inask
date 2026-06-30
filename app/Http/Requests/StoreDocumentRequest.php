@@ -20,7 +20,7 @@ class StoreDocumentRequest extends FormRequest
                 'required',
                 'file',
                 // 最大サイズはconfigから取得する（KB単位）
-                'max:' . config('inask.max_upload_size_kb', 10240),
+                'max:' . config('inask.max_upload_size_kb', 220),
                 'mimetypes:' . implode(',', config('inask.supported_mime_types', [])),
             ],
         ];
@@ -29,7 +29,7 @@ class StoreDocumentRequest extends FormRequest
     // バリデーションエラーメッセージをconfigから取得する（サイズ上限は動的に組み立てる）
     public function messages(): array
     {
-        $maxMb = config('inask.max_upload_size_kb', 10240) / 1024;
+        $maxMb = config('inask.max_upload_size_kb', 220) / 1024;
 
         return [
             'file.required'  => config('errors.file.required'),
