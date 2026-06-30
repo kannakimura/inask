@@ -101,6 +101,31 @@ class ProcessDocumentJobTest extends TestCase
         $this->assertSame(config('inask.document_status.failed'), $document->fresh()->status);
     }
 
+    // pending以外のstatusのDocumentはJobをスキップする（二重dispatch防止）
+    public function test_handle_skips_when_status_is_not_pending(): void
+    {
+        foreach (['processing', 'done', 'failed'] as $status) {
+            $document = Document::factory()->create([
+                'status'    => $status,
+                'mime_type' => 'text/plain',
+                'file_path' => 'documents/test.txt',
+            ]);
+
+            $textExtractor = $this->createMock(TextExtractorService::class);
+            // pending以外ではextract()が呼ばれないことを確認する
+            $textExtractor->expects($this->never())->method('extract');
+
+            $chunkSplitter    = $this->createMock(ChunkSplitterService::class);
+            $embeddingService = $this->createMock(EmbeddingService::class);
+
+            $job = new ProcessDocumentJob($document);
+            $job->handle($textExtractor, $chunkSplitter, $embeddingService);
+
+            // statusが変わっていないことを確認する
+            $this->assertSame($status, $document->fresh()->status);
+        }
+    }
+
     // queueレベルの失敗（worker kill等）でもステータスがfailedになる
     public function test_failed_updates_status_to_failed(): void
     {
