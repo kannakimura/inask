@@ -21,7 +21,13 @@ class DocumentController extends Controller
         // 新しい順にページネーションして取得する
         $documents = Document::latest()->paginate(20);
 
-        return view('dashboard', compact('documents'));
+        // pending/processingが1件でもある場合はフロントでポーリングを有効にする
+        $hasPending = Document::whereIn('status', [
+            config('inask.document_status.pending'),
+            config('inask.document_status.processing'),
+        ])->exists();
+
+        return view('dashboard', compact('documents', 'hasPending'));
     }
 
     // アップロードフォームを表示する（ダッシュボード埋め込みのため未使用）
