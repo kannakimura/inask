@@ -40,4 +40,9 @@ return [
         'api_key' => env('VOYAGE_API_KEY'),
     ],
 
+    // Anthropic Claude API
+    'anthropic' => [
+        'api_key' => env('ANTHROPIC_API_KEY'),
+    ],
+
 ];
