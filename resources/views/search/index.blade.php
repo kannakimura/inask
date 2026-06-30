@@ -45,6 +45,31 @@
                 </div>
             </div>
 
+            {{-- 初期状態（まだ何も検索していない） --}}
+            @if (!isset($result) && !isset($searchError) && !$errors->any())
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="p-8 flex flex-col items-center text-center">
+                        <svg class="w-12 h-12 text-indigo-200 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
+                        </svg>
+                        <p class="text-gray-600 text-sm font-medium">社内ドキュメントに質問してみましょう</p>
+                        <p class="text-gray-400 text-xs mt-1 mb-5">登録されているドキュメントをもとに、AIが回答を生成します</p>
+                        {{-- 検索例 --}}
+                        <div class="flex flex-wrap justify-center gap-2">
+                            @foreach (['有給休暇の申請方法は？', '経費精算の締め日はいつ？', '入社初日の持ち物は？'] as $example)
+                                <button
+                                    type="button"
+                                    onclick="document.getElementById('query').value = '{{ $example }}'; document.getElementById('query').focus();"
+                                    class="px-3 py-1.5 rounded-full border border-gray-200 text-xs text-gray-500 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 transition"
+                                >
+                                    {{ $example }}
+                                </button>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             {{-- 検索結果0件（関連ドキュメントなし） --}}
             @isset($searchError)
                 <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-start gap-3">
