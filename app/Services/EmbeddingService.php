@@ -18,6 +18,11 @@ class EmbeddingService
     // 既存のChunkは削除してから新規保存する（再処理対応）
     public function embedAndSave(Document $document, array $chunks): void
     {
+        // 空チャンクで既存データを消してしまわないようガードする
+        if (empty($chunks)) {
+            throw new \InvalidArgumentException(config('errors.embedding.empty_chunks'));
+        }
+
         // トランザクション外で全チャンクのembeddingを取得する
         // （外部APIをトランザクション内で待つとDB接続を長時間占有するため）
         $embeddings = [];
