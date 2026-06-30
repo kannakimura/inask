@@ -15,7 +15,6 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // デモ用ユーザーを1件作成する
         // デモ用ユーザーを作成する（local環境のみis_admin=true）
         User::updateOrCreate(
             ['email' => 'demo@innask.local'],
@@ -25,5 +24,8 @@ class DatabaseSeeder extends Seeder
                 'is_admin' => app()->environment('local'),
             ]
         );
+
+        // デモ用ドキュメント・チャンク・FAQを投入する
+        $this->call(DemoSeeder::class);
     }
 }
