@@ -12,6 +12,9 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // pgvector拡張がなければ作成する（テスト用DBでも有効になるよう冪等で実行）
+        DB::statement('CREATE EXTENSION IF NOT EXISTS vector');
+
         Schema::create('chunks', function (Blueprint $table) {
             $table->id();
             $table->foreignId('document_id')->constrained()->cascadeOnDelete();
