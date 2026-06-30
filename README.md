@@ -1,4 +1,4 @@
-# Innask
+# inask
 
 社内ドキュメントから FAQ を自動生成し、自然言語で検索できる RAG（Retrieval-Augmented Generation）ツールのデモアプリケーションです。
 
