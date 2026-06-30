@@ -7,8 +7,14 @@ use App\Models\User;
 
 class DocumentPolicy
 {
-    // adminユーザーのみドキュメント一覧を閲覧できる
+    // 認証ユーザーは全員ドキュメント一覧を閲覧できる
     public function viewAny(User $user): bool
+    {
+        return true;
+    }
+
+    // adminユーザーのみドキュメントをアップロードできる
+    public function create(User $user): bool
     {
         return $user->is_admin;
     }

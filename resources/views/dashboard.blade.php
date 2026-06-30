@@ -22,7 +22,8 @@
                 </div>
             @endif
 
-            {{-- ドキュメントアップロードフォーム --}}
+            {{-- ドキュメントアップロードフォーム（adminのみ表示） --}}
+            @if (auth()->user()?->is_admin)
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6">
                     <h3 class="text-lg font-semibold text-gray-900 mb-4">ドキュメントをアップロード</h3>
@@ -61,6 +62,7 @@
                     </form>
                 </div>
             </div>
+            @endif
 
             {{-- ドキュメント一覧 --}}
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">

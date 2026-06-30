@@ -20,20 +20,28 @@ class DocumentPolicyTest extends TestCase
         $this->policy = new DocumentPolicy();
     }
 
-    // adminユーザーはドキュメント一覧を閲覧できる
-    public function test_admin_can_view_any_document(): void
-    {
-        $admin = User::factory()->create(['is_admin' => true]);
-
-        $this->assertTrue($this->policy->viewAny($admin));
-    }
-
-    // 非adminユーザーはドキュメント一覧を閲覧できない
-    public function test_non_admin_cannot_view_any_document(): void
+    // 全認証ユーザーはドキュメント一覧を閲覧できる
+    public function test_any_authenticated_user_can_view_documents(): void
     {
         $user = User::factory()->create(['is_admin' => false]);
 
-        $this->assertFalse($this->policy->viewAny($user));
+        $this->assertTrue($this->policy->viewAny($user));
+    }
+
+    // adminユーザーはドキュメントをアップロードできる
+    public function test_admin_can_create_document(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+
+        $this->assertTrue($this->policy->create($admin));
+    }
+
+    // 非adminユーザーはドキュメントをアップロードできない
+    public function test_non_admin_cannot_create_document(): void
+    {
+        $user = User::factory()->create(['is_admin' => false]);
+
+        $this->assertFalse($this->policy->create($user));
     }
 
     // adminユーザーはドキュメントを削除できる

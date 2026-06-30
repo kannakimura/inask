@@ -13,10 +13,9 @@ class DocumentController extends Controller
     {
     }
 
-    // ダッシュボード兼ドキュメント一覧を表示する（adminのみ閲覧可）
+    // ダッシュボード兼ドキュメント一覧を表示する（全認証ユーザーが閲覧可）
     public function index()
     {
-        // ドキュメント管理はadmin専用機能のため非adminは403を返す
         $this->authorize('viewAny', Document::class);
 
         // 新しい順にページネーションして取得する
@@ -31,9 +30,12 @@ class DocumentController extends Controller
         abort(403);
     }
 
-    // アップロードされたファイルを保存する
+    // アップロードされたファイルを保存する（adminのみ）
     public function store(StoreDocumentRequest $request)
     {
+        // アップロードはadmin専用機能（DocumentPolicy::createで判定）
+        $this->authorize('create', Document::class);
+
         // バリデーション済みファイルをServiceに渡して保存する
         $document = $this->documentService->store($request->file('file'));
 
