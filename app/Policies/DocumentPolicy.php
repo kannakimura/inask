@@ -13,6 +13,12 @@ class DocumentPolicy
         return true;
     }
 
+    // 認証ユーザーは全員ドキュメント詳細を閲覧できる
+    public function view(User $user, Document $document): bool
+    {
+        return true;
+    }
+
     // adminユーザーのみドキュメントをアップロードできる
     public function create(User $user): bool
     {

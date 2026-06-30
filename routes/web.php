@@ -10,10 +10,10 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
-// ダッシュボードはドキュメント一覧を兼ねるためControllerに委譲する
-Route::get('/dashboard', [DocumentController::class, 'index'])
-    ->middleware(['auth', 'verified'])
-    ->name('dashboard');
+// /dashboard は /documents にリダイレクトする
+Route::get('/dashboard', function () {
+    return redirect()->route('documents.index');
+})->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

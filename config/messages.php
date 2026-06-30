@@ -6,25 +6,36 @@
 
 return [
 
-    // ダッシュボード（ドキュメント一覧画面）
-    'dashboard' => [
-        'page_title'            => 'Dashboard',
+    // ドキュメント一覧画面
+    'documents' => [
+        'page_title'            => '社内ドキュメント一覧',
+        'nav_link'              => '社内ドキュメント一覧',
         'processing_notice'     => '処理中のドキュメントがあります。自動更新中…',
         'upload_section_title'  => 'ドキュメントをアップロード',
         'file_label'            => 'ファイルを選択',
         'upload_button'         => 'アップロード',
         'upload_cta_button'     => 'アップロードする',
-        'list_section_title'    => 'ドキュメント一覧',
         'delete_button'         => '削除',
+        'keyword_placeholder'   => 'タイトル・内容で絞り込む',
+        'keyword_button'        => '絞り込み',
+        'keyword_clear'         => 'クリア',
+        'no_results'            => '該当するドキュメントが見つかりませんでした',
+    ],
+
+    // ドキュメント詳細・FAQ画面
+    'document_show' => [
+        'faq_section_title'   => 'よくある質問（FAQ）',
+        'back_link'           => '← 一覧に戻る',
+        'no_faq'              => 'FAQはまだ生成されていません',
     ],
 
     // 検索画面
     'search' => [
-        'page_title'            => '社内ドキュメント検索',
+        'page_title'            => 'ドキュメント内容検索',
         'query_label'           => '質問を入力してください',
         'query_placeholder'     => '例：有給休暇の申請方法は？',
         'search_button'         => '検索',
-        'nav_link'              => '検索',
+        'nav_link'              => 'ドキュメント内容検索',
         // 検索前の初期ガイダンス
         'guidance_title'        => '社内ドキュメントに質問してみましょう',
         'guidance_description'  => '登録されているドキュメントをもとに、AIが回答を生成します',

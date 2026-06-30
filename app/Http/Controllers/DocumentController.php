@@ -13,13 +13,26 @@ class DocumentController extends Controller
     {
     }
 
-    // ダッシュボード兼ドキュメント一覧を表示する（全認証ユーザーが閲覧可）
-    public function index()
+    // ドキュメント一覧を表示する（全認証ユーザーが閲覧可）
+    public function index(\Illuminate\Http\Request $request)
     {
         $this->authorize('viewAny', Document::class);
 
-        // faqs をeager loadしてN+1を防ぐ
-        $documents = Document::with('faqs')->latest()->paginate(20);
+        $keyword = $request->query('keyword', '');
+
+        $query = Document::query()->latest();
+
+        // キーワードが入力されている場合はタイトルまたはチャンク内容で絞り込む
+        if ($keyword !== '') {
+            $query->where(function ($q) use ($keyword) {
+                $q->where('title', 'ilike', '%' . $keyword . '%')
+                  ->orWhereHas('chunks', function ($q2) use ($keyword) {
+                      $q2->where('content', 'ilike', '%' . $keyword . '%');
+                  });
+            });
+        }
+
+        $documents = $query->paginate(20)->withQueryString();
 
         // pending/processingが1件でもある場合はフロントでポーリングを有効にする
         $hasPending = Document::whereIn('status', [
@@ -27,7 +40,7 @@ class DocumentController extends Controller
             config('inask.document_status.processing'),
         ])->exists();
 
-        return view('dashboard', compact('documents', 'hasPending'));
+        return view('documents.index', compact('documents', 'hasPending', 'keyword'));
     }
 
     // アップロードフォームを表示する（ダッシュボード埋め込みのため未使用）
@@ -50,11 +63,15 @@ class DocumentController extends Controller
             ->with('success', config('errors.document.upload_success'));
     }
 
-    // ドキュメント詳細（FAQ一覧）を表示する
+    // ドキュメント詳細とFAQ一覧を表示する
     public function show(Document $document)
     {
-        // TODO(Phase 2-7): ドキュメント詳細・FAQ一覧の表示を実装する
-        abort(403);
+        $this->authorize('view', $document);
+
+        // faqs をeager loadしてN+1を防ぐ
+        $document->load('faqs');
+
+        return view('documents.show', compact('document'));
     }
 
     // ドキュメントを削除する
