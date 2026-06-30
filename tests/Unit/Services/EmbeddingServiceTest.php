@@ -46,6 +46,25 @@ class EmbeddingServiceTest extends TestCase
         ]);
     }
 
+    // max_chunksを超えるチャンク数の場合は既存データを削除せず例外を投げる
+    public function test_embed_and_save_throws_when_chunks_exceed_max(): void
+    {
+        $document = Document::factory()->create();
+
+        // max_chunksを1に設定してチャンク数超過を再現する
+        config(['inask.embedding.max_chunks' => 1]);
+
+        $voyageClient = $this->createMock(VoyageClient::class);
+        $voyageClient->expects($this->never())->method('embedBatch');
+
+        $service = new EmbeddingService($voyageClient);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage(config('errors.embedding.too_many_chunks'));
+
+        $service->embedAndSave($document, ['チャンク1', 'チャンク2']);
+    }
+
     // 空チャンク配列を渡した場合は既存データを削除せず例外を投げる
     public function test_embed_and_save_throws_on_empty_chunks(): void
     {
