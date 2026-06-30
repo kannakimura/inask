@@ -1,8 +1,23 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            Dashboard
-        </h2>
+        <div class="flex items-center justify-between">
+            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                Dashboard
+            </h2>
+            {{-- pending/processing中はポーリング中インジケーターを表示する --}}
+            @if ($hasPending)
+                <span
+                    class="inline-flex items-center gap-1.5 text-xs text-yellow-700 bg-yellow-50 border border-yellow-200 rounded-full px-3 py-1"
+                    data-auto-reload="true"
+                >
+                    <span class="relative flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-yellow-500"></span>
+                    </span>
+                    処理中のドキュメントがあります。自動更新中…
+                </span>
+            @endif
+        </div>
     </x-slot>
 
     <div class="py-12">
@@ -35,7 +50,13 @@
                         <div class="mb-4">
                             <label for="file" class="block text-sm font-medium text-gray-700 mb-1">
                                 ファイルを選択
-                                <span class="text-gray-400 font-normal">（PDF・テキスト・Markdown、最大{{ config('inask.max_upload_size_kb', 10240) / 1024 }}MB）</span>
+                                @php
+                                    $maxKb = config('inask.max_upload_size_kb', 220);
+                                    $maxLabel = $maxKb >= 1024
+                                        ? round($maxKb / 1024, 1) . 'MB'
+                                        : $maxKb . 'KB';
+                                @endphp
+                                <span class="text-gray-400 font-normal">（PDF・テキスト・Markdown、最大{{ $maxLabel }}）</span>
                             </label>
                             <input
                                 type="file"
@@ -140,4 +161,13 @@
 
         </div>
     </div>
+
+    {{-- pending/processing中のドキュメントがある場合は3秒おきに自動リロードする --}}
+    @if ($hasPending)
+        <script>
+            setTimeout(function () {
+                location.reload();
+            }, 3000);
+        </script>
+    @endif
 </x-app-layout>

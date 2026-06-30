@@ -149,4 +149,48 @@ class DashboardTest extends TestCase
         $response->assertStatus(200);
         $response->assertDontSee('削除');
     }
+
+    // pending/processingのドキュメントがある場合はdata-auto-reload属性とJSが出力される
+    public function test_auto_reload_is_present_when_pending_document_exists(): void
+    {
+        $this->withoutVite();
+        $user = User::factory()->create(['is_admin' => false]);
+        Document::factory()->create(['status' => config('inask.document_status.pending')]);
+
+        $response = $this->actingAs($user)->get(route('dashboard'));
+
+        $response->assertStatus(200);
+        // ポーリング中インジケーターが表示されることを確認する
+        $response->assertSee('data-auto-reload="true"', false);
+        // 自動リロードのJSが出力されることを確認する
+        $response->assertSee('location.reload()', false);
+    }
+
+    // processingのドキュメントがある場合も自動リロードが有効になる
+    public function test_auto_reload_is_present_when_processing_document_exists(): void
+    {
+        $this->withoutVite();
+        $user = User::factory()->create(['is_admin' => false]);
+        Document::factory()->create(['status' => config('inask.document_status.processing')]);
+
+        $response = $this->actingAs($user)->get(route('dashboard'));
+
+        $response->assertStatus(200);
+        $response->assertSee('data-auto-reload="true"', false);
+    }
+
+    // done/failedのみの場合は自動リロードが無効になる
+    public function test_auto_reload_is_absent_when_all_documents_are_done(): void
+    {
+        $this->withoutVite();
+        $user = User::factory()->create(['is_admin' => false]);
+        Document::factory()->create(['status' => config('inask.document_status.done')]);
+        Document::factory()->create(['status' => config('inask.document_status.failed')]);
+
+        $response = $this->actingAs($user)->get(route('dashboard'));
+
+        $response->assertStatus(200);
+        $response->assertDontSee('data-auto-reload="true"', false);
+        $response->assertDontSee('location.reload()', false);
+    }
 }
