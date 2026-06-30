@@ -28,6 +28,9 @@ return [
         'dimensions' => 1024,
         // Voyage APIのinput上限は1000件のため余裕をもって128件に設定する
         'batch_size' => 128,
+        // Job timeoutと整合させるためのチャンク数上限
+        // 500チャンク → ceil(500/128)=4バッチ、最悪4×90秒=360秒 → timeout=600秒と一致させる
+        'max_chunks' => 500,
     ],
 
     'search' => [
