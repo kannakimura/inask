@@ -21,9 +21,11 @@
 | 種別 | 使用技術 |
 |---|---|
 | バックエンド | Laravel 11 / PHP 8.3 |
+| 認証 | Laravel Breeze |
 | データベース | PostgreSQL 16 + pgvector |
 | キャッシュ・キュー | Redis |
-| フロントエンド | Blade / Tailwind CSS |
+| フロントエンド | Blade / Tailwind CSS / Vite |
+| Web サーバー | Nginx / PHP-FPM |
 | AI（埋め込み） | Voyage AI (`voyage-3`) |
 | AI（回答生成） | Anthropic Claude (`claude-sonnet-4-6`) |
 | インフラ | Docker / Docker Compose |
