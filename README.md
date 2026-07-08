@@ -18,17 +18,35 @@
 
 ## 技術スタック
 
-| 種別 | 使用技術 |
-|---|---|
-| バックエンド | Laravel 11 / PHP 8.3 |
-| 認証 | Laravel Breeze |
-| データベース | PostgreSQL 16 + pgvector |
-| キャッシュ・キュー | Redis |
-| フロントエンド | Blade / Tailwind CSS / Vite |
-| Web サーバー | Nginx / PHP-FPM |
-| AI（埋め込み） | Voyage AI (`voyage-3`) |
-| AI（回答生成） | Anthropic Claude (`claude-sonnet-4-6`) |
-| インフラ | Docker / Docker Compose |
+| 種別 | 使用技術 | 備考 |
+|---|---|---|
+| バックエンド | Laravel 11 / PHP 8.3 | |
+| 認証 | Laravel Breeze | |
+| データベース | PostgreSQL 16 + pgvector | ベクトルデータの保存・類似検索に pgvector を使用 |
+| キャッシュ・キュー | Redis | ドキュメント処理ジョブのキュー管理 |
+| フロントエンド | Blade / Tailwind CSS / Vite | |
+| Web サーバー | Nginx / PHP-FPM | |
+| AI（埋め込み） | Voyage AI (`voyage-3`) | テキストを数値ベクトルに変換する。意味が近い文章ほど近い数値になるため、質問と関連チャンクの類似検索に使用 |
+| AI（回答生成） | Anthropic Claude (`claude-sonnet-4-6`) | 検索で取得したチャンクを文脈として渡し、自然な回答文と FAQ を生成 |
+| インフラ | Docker / Docker Compose | |
+
+---
+
+## リポジトリ構成
+
+このアプリは2つのリポジトリで構成されています。
+
+```
+任意のディレクトリ/
+├── inask-docker/        ← Docker 設定リポジトリ
+│   ├── docker-compose.yml
+│   ├── setup.sh
+│   ├── nginx/default.conf
+│   ├── php/Dockerfile
+│   └── postgres/init.sql
+└── inask/               ← Laravel アプリ本体（このリポジトリ）
+    └── ...
+```
 
 ---
 
